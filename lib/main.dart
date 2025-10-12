@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadow_chat/contants/constants.dart';
-import 'package:shadow_chat/screens/auth/home_screen.dart';
+import 'package:shadow_chat/screens/home_screen.dart';
 import 'package:shadow_chat/screens/auth/login_screen.dart';
+import 'package:shadow_chat/screens/splash_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,7 +32,7 @@ class MyApp extends StatelessWidget {
         ),
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const LoginScreen(),
+      home: const SplashScreen(),
     ));
   }
 }

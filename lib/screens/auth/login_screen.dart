@@ -35,7 +35,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             ),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white60,
+                backgroundColor: Colors.green.shade200,
                 fixedSize: Size(width * .8, height * .065),
               ),
               onPressed: () {},
