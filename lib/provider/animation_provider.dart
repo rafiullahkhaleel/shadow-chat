@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 final loginAnimationProvider =
-ChangeNotifierProvider<LoginAnimationNotifier>((ref) {
-  return LoginAnimationNotifier();
+ChangeNotifierProvider<AnimationNotifier>((ref) {
+  return AnimationNotifier();
 });
 
-class LoginAnimationNotifier extends ChangeNotifier {
+class AnimationNotifier extends ChangeNotifier {
   late final AnimationController _controller;
   late final Animation<AlignmentGeometry> animation;
   bool _initialized = false;

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadow_chat/provider/auth_provider.dart';
 
-import '../../provider/login_provider.dart';
+import '../../provider/animation_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -38,7 +39,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 backgroundColor: Colors.green.shade200,
                 fixedSize: Size(width * .8, height * .065),
               ),
-              onPressed: () {},
+              onPressed: () {
+                ref.read(authProvider.notifier).signInWithGoogle();
+              },
               label: const Text(
                 'Sign In with Google',
                 style: TextStyle(
