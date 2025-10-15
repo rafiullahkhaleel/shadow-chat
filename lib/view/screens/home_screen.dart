@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadow_chat/provider/auth_provider.dart';
 import 'package:shadow_chat/provider/user_provider.dart';
 import 'package:shadow_chat/view/widgets/user_card.dart';
 
@@ -14,7 +15,9 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         leading: Icon(Icons.home),
         title: Text('Shadow Chat'),
-        actions: [IconButton(onPressed: () {}, icon: Icon(Icons.search))],
+        actions: [IconButton(onPressed: () {
+          ref.read(authProvider.notifier).signOut();
+        }, icon: Icon(Icons.search))],
       ),
       body: provider.when(
         data: (data) {

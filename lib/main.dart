@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadow_chat/contants/constants.dart';
 import 'package:shadow_chat/view/screens/home_screen.dart';
+import 'package:shadow_chat/view/screens/splash_screen.dart';
 
 import 'firebase_options.dart';
 
@@ -34,7 +35,7 @@ class MyApp extends StatelessWidget {
         ),
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const HomeScreen(),
+      home: const SplashScreen(),
     ));
   }
 }
