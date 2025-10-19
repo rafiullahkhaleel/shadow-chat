@@ -1,13 +1,11 @@
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:shadow_chat/utils/utils.dart';
 import 'package:shadow_chat/view/screens/home_screen.dart';
+
+import '../utils/utils.dart';
 
 final authProvider = StateNotifierProvider<AuthNotifier, User?>((ref) {
   return AuthNotifier();

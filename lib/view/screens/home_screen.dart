@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shadow_chat/provider/auth_provider.dart';
-import 'package:shadow_chat/provider/user_provider.dart';
+import 'package:shadow_chat/view/screens/profile_screen.dart';
 import 'package:shadow_chat/view/widgets/user_card.dart';
+
+import '../../core/provider/user_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -15,9 +16,24 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         leading: Icon(Icons.home),
         title: Text('Shadow Chat'),
-        actions: [IconButton(onPressed: () {
-          ref.read(authProvider.notifier).signOut();
-        }, icon: Icon(Icons.search))],
+        actions: [
+          IconButton(onPressed: () {}, icon: Icon(Icons.search)),
+          IconButton(
+            onPressed: () {
+              if (provider.asData != null &&
+                  provider.asData!.value.isNotEmpty) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder:
+                        (context) =>
+                            ProfileScreen(userData: provider.asData!.value[0]),
+                  ),
+                );
+              }
+            },
+            icon: Icon(Icons.more_vert),
+          ),
+        ],
       ),
       body: provider.when(
         data: (data) {
@@ -45,4 +61,3 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 }
-

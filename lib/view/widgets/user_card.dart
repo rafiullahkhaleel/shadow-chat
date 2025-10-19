@@ -34,7 +34,9 @@ class UserCard extends StatelessWidget {
             ),
           ),
           title: Text(
-            name,
+            name*10,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
           ),
           subtitle: Text(
