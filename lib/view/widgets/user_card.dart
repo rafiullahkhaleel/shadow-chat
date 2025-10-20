@@ -34,7 +34,7 @@ class UserCard extends StatelessWidget {
             ),
           ),
           title: Text(
-            name*10,
+            name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
@@ -68,23 +68,3 @@ class UserCard extends StatelessWidget {
     );
   }
 }
-
-// import 'package:flutter/material.dart';
-//
-// class UserCard extends StatelessWidget {
-//   const UserCard({super.key});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Card(
-//       child: ListTile(
-//         leading: CircleAvatar(
-//           backgroundImage: NetworkImage('https://example.com/user_avatar.png'),
-//         ),
-//         title: Text('Username'),
-//         subtitle: Text('Last message preview...'),
-//         trailing: Text('2:30 PM'),
-//       ),
-//     );
-//   }
-// }

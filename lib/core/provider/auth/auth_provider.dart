@@ -3,25 +3,31 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shadow_chat/core/provider/auth/auth_state.dart';
 import 'package:shadow_chat/view/screens/home_screen.dart';
 
-import '../utils/utils.dart';
+import '../../../view/screens/auth/login_screen.dart';
+import '../../utils/utils.dart';
 
-final authProvider = StateNotifierProvider<AuthNotifier, User?>((ref) {
+final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier();
 });
 
-class AuthNotifier extends StateNotifier<User?> {
+class AuthNotifier extends StateNotifier<AuthState> {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  AuthNotifier() : super(FirebaseAuth.instance.currentUser);
+  AuthNotifier() : super(AuthState(user: FirebaseAuth.instance.currentUser));
 
   Future<void> signInWithGoogle(BuildContext context) async {
+    state = state.copyWith(isLoading: true);
     try {
-     // await InternetAddress.lookup('google.com');
+      // await InternetAddress.lookup('google.com');
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
-      if (googleUser == null) return; // User cancelled the sign-in
+      if (googleUser == null){
+        state = state.copyWith(isLoading: false);
+        return;
+      } // User cancelled the sign-in
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
@@ -34,8 +40,9 @@ class AuthNotifier extends StateNotifier<User?> {
       final userCredential = await FirebaseAuth.instance.signInWithCredential(
         credential,
       );
-      var user = userCredential.user;
-      state = user;
+      final user = userCredential.user;
+
+      state = state.copyWith(user: user);
       if (user != null) {
         final userDoc = FirebaseFirestore.instance
             .collection('chatUsers')
@@ -58,23 +65,43 @@ class AuthNotifier extends StateNotifier<User?> {
             'name': user.displayName,
             'email': user.email,
             'image': user.photoURL,
+            'about': '2nd Available'
           });
         }
       }
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>HomeScreen()));
+      state = state.copyWith(isLoading: false);
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+      );
     } catch (e) {
       debugPrint('Error signing in with Google: $e');
       SnackBarHelper.showError(
         context,
         'Something went wrong (Check Internet!',
       );
+      state = state.copyWith(isLoading: false);
       rethrow;
     }
   }
 
-  Future<void> signOut() async {
-    await _googleSignIn.signOut();
-    await FirebaseAuth.instance.signOut();
-    state = null;
+  Future<void> signOut(BuildContext context) async {
+    try {
+      state = state.copyWith(isLoading: true);
+      await _googleSignIn.signOut();
+      await FirebaseAuth.instance.signOut();
+      state = AuthState(user: null, isLoading: false);
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+        (route) => false,
+      );
+    } catch (e) {
+      debugPrint('Logout error: $e');
+      SnackBarHelper.showError(context, 'Logout failed!');
+      state = state.copyWith(isLoading: false);
+    }
+
+    // state = null;
   }
 }
