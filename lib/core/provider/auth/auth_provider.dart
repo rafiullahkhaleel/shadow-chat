@@ -1,22 +1,25 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shadow_chat/core/provider/auth/auth_state.dart';
+import 'package:shadow_chat/core/provider/current_user_data.dart';
+import 'package:shadow_chat/core/provider/users_data_provider.dart';
 import 'package:shadow_chat/view/screens/home_screen.dart';
 
 import '../../../view/screens/auth/login_screen.dart';
 import '../../utils/utils.dart';
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier();
+  return AuthNotifier(ref);
 });
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
-
-  AuthNotifier() : super(AuthState(user: FirebaseAuth.instance.currentUser));
+  final Ref ref;
+  AuthNotifier(this.ref) : super(AuthState(user: FirebaseAuth.instance.currentUser));
 
   Future<void> signInWithGoogle(BuildContext context) async {
     state = state.copyWith(isLoading: true);
@@ -24,7 +27,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // await InternetAddress.lookup('google.com');
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
-      if (googleUser == null){
+      if (googleUser == null) {
         state = state.copyWith(isLoading: false);
         return;
       } // User cancelled the sign-in
@@ -55,9 +58,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
             'email': user.email,
             'image': user.photoURL,
             'about': 'Available',
-            'createdAt': FieldValue.serverTimestamp(),
+            'createdAt': '',
             'isOnline': true,
-            'lastActive': FieldValue.serverTimestamp(),
+            'lastActive': '',
             'pushToken': '',
           });
         } else {
@@ -65,11 +68,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
             'name': user.displayName,
             'email': user.email,
             'image': user.photoURL,
-            'about': '2nd Available'
+            'about': '2nd Available',
           });
         }
       }
       state = state.copyWith(isLoading: false);
+      final container = ProviderScope.containerOf(context, listen: false);
+      container.refresh(currentUserDataProvider);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => HomeScreen()),
@@ -90,6 +95,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(isLoading: true);
       await _googleSignIn.signOut();
       await FirebaseAuth.instance.signOut();
+      ref.invalidate(currentUserDataProvider);
+      ref.invalidate(userDataProvider)
       state = AuthState(user: null, isLoading: false);
       Navigator.pushAndRemoveUntil(
         context,
@@ -101,7 +108,5 @@ class AuthNotifier extends StateNotifier<AuthState> {
       SnackBarHelper.showError(context, 'Logout failed!');
       state = state.copyWith(isLoading: false);
     }
-
-    // state = null;
   }
 }

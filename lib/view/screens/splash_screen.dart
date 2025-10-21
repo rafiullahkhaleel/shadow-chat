@@ -1,18 +1,21 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadow_chat/core/provider/current_user_data.dart';
 import 'package:shadow_chat/view/screens/auth/login_screen.dart';
 import 'package:shadow_chat/view/screens/home_screen.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
+    ref.read(currentUserDataProvider);
     Future.delayed(Duration(seconds: 3), () {
       if (FirebaseAuth.instance.currentUser == null) {
         Navigator.pushReplacement(

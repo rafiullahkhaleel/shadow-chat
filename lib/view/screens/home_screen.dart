@@ -3,14 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadow_chat/view/screens/profile_screen.dart';
 import 'package:shadow_chat/view/widgets/user_card.dart';
 
-import '../../core/provider/user_provider.dart';
+import '../../core/provider/current_user_data.dart';
+import '../../core/provider/users_data_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final provider = ref.watch(userProvider);
+    ref.read(currentUserDataProvider);
+    final provider = ref.watch(userDataProvider);
     return Scaffold(
       backgroundColor: Colors.orange.shade100,
       appBar: AppBar(
@@ -20,16 +22,14 @@ class HomeScreen extends ConsumerWidget {
           IconButton(onPressed: () {}, icon: Icon(Icons.search)),
           IconButton(
             onPressed: () {
-              if (provider.asData != null &&
-                  provider.asData!.value.isNotEmpty) {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder:
                         (context) =>
-                            ProfileScreen(userData: provider.asData!.value[0]),
+                            ProfileScreen(),
                   ),
                 );
-              }
+
             },
             icon: Icon(Icons.more_vert),
           ),
