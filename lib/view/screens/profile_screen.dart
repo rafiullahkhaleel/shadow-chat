@@ -14,78 +14,103 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authProvider);
     final userData = ref.watch(currentUserDataProvider);
+    final userDataAssests = ref.read(currentUserDataProvider.notifier);
+    final authState = ref.watch(authProvider);
     final isLoading = authState.isLoading;
     return Scaffold(
-      body: userData.when(
-        data: (data) {
-          if (data == null) {
-            return Center(
-              child: Text(
-                'No user data found',
-                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 17),
-              ),
-            );
-          } else {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(width: context.width),
-                Stack(
-                  children: [
-                    ClipOval(
-                      child: CachedNetworkImage(
-                        imageUrl: data.image,
-                        fit: BoxFit.cover,
-                        width: context.width * 0.4,
-                        height: context.width * 0.4,
-                        placeholder:
-                            (context, url) =>
-                                Icon(Icons.person, size: context.width * 0.2),
-                        errorWidget:
-                            (context, url, error) =>
-                                Icon(Icons.person, size: context.width * 0.2),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15),
+        child: userData.when(
+          data: (data) {
+            if (data == null) {
+              return Center(
+                child: Text(
+                  'No user data found',
+                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 17),
+                ),
+              );
+            } else {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(width: context.width),
+                  Stack(
+                    children: [
+                      ClipOval(
+                        child: CachedNetworkImage(
+                          imageUrl: data.image,
+                          fit: BoxFit.cover,
+                          width: context.width * 0.4,
+                          height: context.width * 0.4,
+                          placeholder:
+                              (context, url) =>
+                                  Icon(Icons.person, size: context.width * 0.2),
+                          errorWidget:
+                              (context, url, error) =>
+                                  Icon(Icons.person, size: context.width * 0.2),
+                        ),
                       ),
-                    ),
-                    Positioned(
-                      bottom: 10,
-                      right: -20,
-                      child: MaterialButton(
-                        onPressed: () {},
-                        color: AppColors.mainColor,
-                        shape: CircleBorder(),
-                        child: Icon(Icons.edit, color: AppColors.white),
+                      Positioned(
+                        bottom: 10,
+                        right: -20,
+                        child: MaterialButton(
+                          onPressed: () {},
+                          color: AppColors.mainColor,
+                          shape: CircleBorder(),
+                          child: Icon(Icons.edit, color: AppColors.white),
+                        ),
                       ),
+                    ],
+                  ),
+                  SizedBox(height: context.height * 0.03),
+                  Text(
+                    userData.asData?.value?.email ?? '',
+                    style: TextStyle(fontWeight: FontWeight.w400, fontSize: 16),
+                  ),
+                  SizedBox(height: context.height * 0.03),
+                  CustomTextField(
+                    labelText: 'Name',
+                    controller: userDataAssests.nameController,
+                  ),
+                  SizedBox(height: context.height * 0.02),
+                  CustomTextField(
+                    labelText: 'About',
+                    controller: userDataAssests.aboutController,
+                  ),
+                  SizedBox(height: context.height * 0.03),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      userDataAssests.updateData(context);
+                    },
+                    label: Text(
+                      userDataAssests.isUpdating
+                          ? 'Updating...'
+                          : 'Update Profile',
                     ),
-                  ],
-                ),
-                SizedBox(height: context.height * 0.03),
-                CustomTextField(
-                  labelText: 'Name',
-                  controller: TextEditingController(text: data.name),
-                ),
-                SizedBox(height: context.height * 0.02),
-                CustomTextField(
-                  labelText: 'About',
-                  controller: TextEditingController(text: data.about),
-                ),
-                SizedBox(height: context.height * 0.03),
-                ElevatedButton.icon(
-                  onPressed: () {},
-                  label: Text('Update Profile'),
-                  icon: Icon(Icons.edit),
-                ),
-              ],
-            );
-          }
-        },
-        error: (error, stack) => Center(child: Text('$error')),
-        loading: () => Center(child: CircularProgressIndicator()),
+                    icon:
+                        userDataAssests.isUpdating
+                            ? SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                            : Icon(Icons.edit),
+                  ),
+                ],
+              );
+            }
+          },
+          error: (error, stack) => Center(child: Text('$error')),
+          loading: () => Center(child: CircularProgressIndicator()),
+        ),
       ),
       floatingActionButton:
-          userData.asData!.value != null
+          userData.asData?.value != null
               ? FloatingActionButton.extended(
                 backgroundColor: AppColors.mainColor,
                 foregroundColor: AppColors.white,

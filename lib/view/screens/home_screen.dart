@@ -11,7 +11,6 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.read(currentUserDataProvider);
     final provider = ref.watch(userDataProvider);
     return Scaffold(
       backgroundColor: Colors.orange.shade100,

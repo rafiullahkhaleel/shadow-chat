@@ -7,7 +7,7 @@ import '../model/user_model.dart';
 final userDataProvider = StreamProvider<List<UserModel>>((ref) {
   return FirebaseFirestore.instance
       .collection('chatUsers')
-      .where('uid', isNotEqualTo: FirebaseAuth.instance.currentUser!.uid)
+      .where('uid', isNotEqualTo: FirebaseAuth.instance.currentUser?.uid)
       .snapshots()
       .map((snapshot) {
         return snapshot.docs

@@ -96,7 +96,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _googleSignIn.signOut();
       await FirebaseAuth.instance.signOut();
       ref.invalidate(currentUserDataProvider);
-      ref.invalidate(userDataProvider)
+      ref.invalidate(userDataProvider);
       state = AuthState(user: null, isLoading: false);
       Navigator.pushAndRemoveUntil(
         context,
