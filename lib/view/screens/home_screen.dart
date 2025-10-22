@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadow_chat/core/contants/constants.dart';
 import 'package:shadow_chat/view/screens/profile_screen.dart';
 import 'package:shadow_chat/view/widgets/user_card.dart';
 
@@ -12,38 +13,64 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final provider = ref.watch(userDataProvider);
+    final prov = ref.read(userDataProvider.notifier);
     return Scaffold(
       backgroundColor: Colors.orange.shade100,
       appBar: AppBar(
         leading: Icon(Icons.home),
-        title: Text('Shadow Chat'),
+        title:
+            provider.isSearching
+                ? Padding(
+                  padding: const EdgeInsets.only(bottom: 5.0),
+                  child: TextFormField(
+                    decoration: InputDecoration(
+                      suffixIcon: IconButton(onPressed: (){
+                        prov.isSearch();
+                      }, icon: Icon(Icons.clear)),
+                      filled: true,
+                      fillColor: AppColors.white,
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                        borderRadius: BorderRadius.circular(100)
+                      ),
+                      hintText: 'Search',
+                      hintStyle: TextStyle(color: Colors.black)
+                    ),
+                    onChanged: (val) {
+                      prov.updateSearchText(val);
+                    },
+                  ),
+                )
+                : Text('Shadow Chat'),
         actions: [
-          IconButton(onPressed: () {}, icon: Icon(Icons.search)),
+          if(!provider.isSearching)
           IconButton(
             onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder:
-                        (context) =>
-                            ProfileScreen(),
-                  ),
-                );
-
+              prov.isSearch();
+            },
+            icon: Icon(Icons.search),
+          ),
+          IconButton(
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (context) => ProfileScreen()));
             },
             icon: Icon(Icons.more_vert),
           ),
         ],
       ),
-      body: provider.when(
-        data: (data) {
-          if (data.isEmpty) {
-            return Center(child: Text('No users found'));
+      body: provider.users.when(
+        data: (_) {
+          final filtered = prov.filteredUsers;
+          if (filtered.isEmpty) {
+            return const Center(child: Text('No users found'));
           }
           return ListView.builder(
-            itemCount: data.length,
+            itemCount: filtered.length,
             physics: const BouncingScrollPhysics(),
             itemBuilder: (context, index) {
-              final user = data[index];
+              final user = filtered[index];
               return UserCard(
                 name: user.name,
                 imageUrl: user.image,
@@ -55,7 +82,7 @@ class HomeScreen extends ConsumerWidget {
           );
         },
         error: (error, stack) => Text('ERROR OCCURRED $error'),
-        loading: () => Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: CircularProgressIndicator()),
       ),
     );
   }
