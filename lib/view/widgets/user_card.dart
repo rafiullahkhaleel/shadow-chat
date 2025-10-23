@@ -24,12 +24,15 @@ class UserCard extends StatelessWidget {
         color: Colors.white,
         child: ListTile(
           contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-          leading: CircleAvatar(
-            radius: 25,
+          leading: ClipRRect(
+            borderRadius: BorderRadius.circular(50),
             child: CachedNetworkImage(
               imageUrl: imageUrl,
+              width: 50,
+              height: 50,
               fit: BoxFit.cover,
-              placeholder: (context, url) => Icon(Icons.person),
+              placeholder: (context, url) =>
+                  Icon(Icons.person),
               errorWidget: (context, url, error) => Icon(Icons.person),
             ),
           ),

@@ -56,7 +56,9 @@ class ProfileScreen extends ConsumerWidget {
                         bottom: 10,
                         right: -20,
                         child: MaterialButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            _bottomSheet(context);
+                          },
                           color: AppColors.mainColor,
                           shape: CircleBorder(),
                           child: Icon(Icons.edit, color: AppColors.white),
@@ -151,6 +153,55 @@ class ProfileScreen extends ConsumerWidget {
                 label: const Text('Login'),
                 icon: const Icon(Icons.login),
               ),
+    );
+  }
+
+  _bottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(height: 10),
+            Text(
+              'Pick Profile Picture',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+            ),
+            SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.white,
+                      shape: CircleBorder()
+                  ),
+                  onPressed: () {},
+                  child: Image.asset(
+                    'assets/gallery.png',
+                    height: context.height * .1,
+                    width: context.width * .15,
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.white,
+                    shape: CircleBorder()
+                  ),
+                  onPressed: () {},
+                  child: Image.asset(
+                    'assets/camera.jpg',
+                    height: context.height * .1,
+                    width: context.width * .15,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+          ],
+        );
+      },
     );
   }
 }

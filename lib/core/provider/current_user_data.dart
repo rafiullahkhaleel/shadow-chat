@@ -24,6 +24,25 @@ class CurrentUserDataNotifier extends StateNotifier<AsyncValue<UserModel?>> {
   final aboutController = TextEditingController();
   bool isUpdating = false;
 
+  Future<void> fetchData() async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) {
+      state = const AsyncValue.data(null);
+    }
+    final doc = await _firestore.collection('chatUsers').doc(uid).get();
+    if (doc.exists) {
+      final currentUser = UserModel.fromMap(doc.data()!);
+      state = AsyncValue.data(currentUser);
+      nameController.text = currentUser.name;
+      aboutController.text = currentUser.about;
+    } else {
+      state = const AsyncValue.data(null);
+    }
+    try {} catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
   Future<void> updateData(BuildContext context) async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) {
@@ -48,22 +67,5 @@ class CurrentUserDataNotifier extends StateNotifier<AsyncValue<UserModel?>> {
     }
   }
 
-  Future<void> fetchData() async {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) {
-      state = const AsyncValue.data(null);
-    }
-    final doc = await _firestore.collection('chatUsers').doc(uid).get();
-    if (doc.exists) {
-      final currentUser = UserModel.fromMap(doc.data()!);
-      state = AsyncValue.data(currentUser);
-      nameController.text = currentUser.name;
-      aboutController.text = currentUser.about;
-    } else {
-      state = const AsyncValue.data(null);
-    }
-    try {} catch (e, st) {
-      state = AsyncValue.error(e, st);
-    }
-  }
+
 }
