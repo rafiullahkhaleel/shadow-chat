@@ -13,7 +13,7 @@ class HomeScreen extends ConsumerWidget {
     final provider = ref.watch(userDataProvider);
     final prov = ref.read(userDataProvider.notifier);
     return PopScope(
-      canPop: false,
+      canPop: !provider.isSearching,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         if (provider.isSearching) {
@@ -90,13 +90,7 @@ class HomeScreen extends ConsumerWidget {
               physics: const BouncingScrollPhysics(),
               itemBuilder: (context, index) {
                 final user = filtered[index];
-                return UserCard(
-                  name: user.name,
-                  imageUrl: user.imageUrl,
-                  isOnline: user.isOnline,
-                  lastActive: user.lastActive,
-                  about: user.about,
-                );
+                return UserCard(data: user);
               },
             );
           },

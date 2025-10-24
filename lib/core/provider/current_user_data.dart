@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:image_picker/image_picker.dart';
@@ -9,7 +10,6 @@ import 'package:shadow_chat/core/model/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:shadow_chat/core/services/image_service.dart';
 import 'package:shadow_chat/core/utils/utils.dart';
-
 
 final currentUserDataProvider =
     StateNotifierProvider<CurrentUserDataNotifier, CurrentUserDataState>((ref) {
@@ -23,12 +23,14 @@ class CurrentUserDataNotifier extends StateNotifier<CurrentUserDataState> {
   }
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
+  final _storage = FirebaseStorage.instance;
 
   final nameController = TextEditingController();
   final aboutController = TextEditingController();
   bool isUpdating = false;
+  String? _imageUrl;
 
-  void setImage(ImageSource source,BuildContext context)async{
+  void setImage(ImageSource source, BuildContext context) async {
     final pickedImage = await ImageService().imagePicker(source);
     if (pickedImage != null) {
       state = state.copyWith(image: pickedImage);
@@ -47,6 +49,7 @@ class CurrentUserDataNotifier extends StateNotifier<CurrentUserDataState> {
       state = CurrentUserDataState(data: AsyncValue.data(currentUser));
       nameController.text = currentUser.name;
       aboutController.text = currentUser.about;
+      _imageUrl = currentUser.imageUrl;
     } else {
       state = CurrentUserDataState(data: AsyncValue.data(null));
     }
@@ -60,11 +63,16 @@ class CurrentUserDataNotifier extends StateNotifier<CurrentUserDataState> {
     if (uid == null) {
       return;
     }
-
     try {
       isUpdating = true;
-      state = CurrentUserDataState(data: AsyncValue.data(state.data.value));
+      state = state.copyWith(data: AsyncValue.data(state.data.value));
+      if (state.image != null) {
+        final storageRef = _storage.ref().child('profilePictures/$uid');
+        await storageRef.putFile(state.image!);
+        _imageUrl = await storageRef.getDownloadURL();
+      }
       await _firestore.collection('chatUsers').doc(uid).update({
+        'image': _imageUrl,
         'name': nameController.text.trim(),
         'about': aboutController.text.trim(),
       });

@@ -8,8 +8,8 @@ class UserModel {
   final String imageUrl;
   final String about;
   final String pushToken;
-  final String lastActive;
-  final String createdAt;
+  final DateTime? lastActive;
+  final DateTime? createdAt;
   final bool isOnline;
 
   UserModel({
@@ -33,34 +33,15 @@ class UserModel {
       imageUrl: map['image'] ?? '',
       about: map['about'] ?? "Hey there! I'm using this app.",
       pushToken: map['pushToken'] ?? '',
-      lastActive: map['lastActive'] ?? '',
-      createdAt: map['createdAt'] ?? '',
+      lastActive:
+          map['lastActive'] != null
+              ? (map['lastActive'] as Timestamp).toDate()
+              : null,
+      createdAt:
+          map['createdAt'] != null
+              ? (map['createdAt'] as Timestamp).toDate()
+              : null,
       isOnline: map['isOnline'] ?? false,
-    );
-  }
-
-  /// ✅ CopyWith (optional for local updates)
-  UserModel copyWith({
-    String? id,
-    String? name,
-    String? email,
-    String? image,
-    String? about,
-    String? pushToken,
-    String? lastActive,
-    String? createdAt,
-    bool? isOnline,
-  }) {
-    return UserModel(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      email: email ?? this.email,
-      imageUrl: image ?? this.imageUrl,
-      about: about ?? this.about,
-      pushToken: pushToken ?? this.pushToken,
-      lastActive: lastActive ?? this.lastActive,
-      createdAt: createdAt ?? this.createdAt,
-      isOnline: isOnline ?? this.isOnline,
     );
   }
 }

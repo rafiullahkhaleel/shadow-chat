@@ -1,20 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:shadow_chat/core/model/user_model.dart';
+import 'package:shadow_chat/view/screens/user_chat_screen.dart';
 
 class UserCard extends StatelessWidget {
-  final String name;
-  final String imageUrl;
-  final bool isOnline;
-  final String about;
-  final String lastActive;
-  const UserCard({
-    super.key,
-    required this.name,
-    required this.imageUrl,
-    required this.isOnline,
-    required this.lastActive,
-    required this.about,
-  });
+  final UserModel data;
+
+  const UserCard({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {
@@ -23,27 +15,33 @@ class UserCard extends StatelessWidget {
       child: Card(
         color: Colors.white,
         child: ListTile(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => UserChatScreen(data: data),
+              ),
+            );
+          },
           contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
           leading: ClipRRect(
             borderRadius: BorderRadius.circular(50),
             child: CachedNetworkImage(
-              imageUrl: imageUrl,
+              imageUrl: data.imageUrl,
               width: 50,
               height: 50,
               fit: BoxFit.cover,
-              placeholder: (context, url) =>
-                  Icon(Icons.person),
+              placeholder: (context, url) => Icon(Icons.person),
               errorWidget: (context, url, error) => Icon(Icons.person),
             ),
           ),
           title: Text(
-            name,
+            data.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
           ),
           subtitle: Text(
-            isOnline ? 'Online' : about,
+            data.isOnline ? 'Online' : data.about,
             style: TextStyle(color: Colors.grey, fontSize: 14),
             overflow: TextOverflow.ellipsis,
           ),
@@ -52,7 +50,7 @@ class UserCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                lastActive,
+                data.lastActive.toString(),
                 style: TextStyle(color: Colors.grey, fontSize: 12),
               ),
               const SizedBox(height: 6),

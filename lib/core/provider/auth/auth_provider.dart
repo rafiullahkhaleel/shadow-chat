@@ -58,9 +58,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
             'email': user.email,
             'image': user.photoURL,
             'about': 'Available',
-            'createdAt': '',
+            'createdAt': FieldValue.serverTimestamp(),
             'isOnline': true,
-            'lastActive': '',
+            'lastActive': FieldValue.serverTimestamp(),
             'pushToken': '',
           });
         } else {
