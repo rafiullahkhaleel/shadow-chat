@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shadow_chat/core/contants/constants.dart';
 import 'package:shadow_chat/core/extensions/context_extension.dart';
 import 'package:shadow_chat/core/provider/current_user_data.dart';
@@ -14,14 +15,68 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userData = ref.watch(currentUserDataProvider);
-    final userDataAssests = ref.read(currentUserDataProvider.notifier);
+    final currentUserState = ref.watch(currentUserDataProvider);
+    final currentUserNotifier = ref.read(currentUserDataProvider.notifier);
     final authState = ref.watch(authProvider);
     final isLoading = authState.isLoading;
+
+    void bottomSheet() {
+      showModalBottomSheet(
+        context: context,
+        builder: (_) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(height: 10),
+              Text(
+                'Pick Profile Picture',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+              ),
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.white,
+                      shape: CircleBorder(),
+                    ),
+                    onPressed: () {
+                      currentUserNotifier.setImage(ImageSource.gallery, context);
+                    },
+                    child: Image.asset(
+                      'assets/gallery.png',
+                      height: context.height * .1,
+                      width: context.width * .15,
+                    ),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.white,
+                      shape: CircleBorder(),
+                    ),
+                    onPressed: () {
+                      currentUserNotifier.setImage(ImageSource.camera, context);
+                    },
+                    child: Image.asset(
+                      'assets/camera.jpg',
+                      height: context.height * .1,
+                      width: context.width * .15,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10),
+            ],
+          );
+        },
+      );
+    }
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15),
-        child: userData.when(
+        child: currentUserState.data.when(
           data: (data) {
             if (data == null) {
               return Center(
@@ -39,25 +94,37 @@ class ProfileScreen extends ConsumerWidget {
                   Stack(
                     children: [
                       ClipOval(
-                        child: CachedNetworkImage(
-                          imageUrl: data.image,
-                          fit: BoxFit.cover,
-                          width: context.width * 0.4,
-                          height: context.width * 0.4,
-                          placeholder:
-                              (context, url) =>
-                                  Icon(Icons.person, size: context.width * 0.2),
-                          errorWidget:
-                              (context, url, error) =>
-                                  Icon(Icons.person, size: context.width * 0.2),
-                        ),
+                        child:
+                            currentUserState.image != null
+                                ? Image.file(
+                                  currentUserState.image!,
+                                  width: context.width * 0.4,
+                                  height: context.width * 0.4,
+                                  fit: BoxFit.cover,
+                                )
+                                : CachedNetworkImage(
+                                  imageUrl: data.imageUrl,
+                                  fit: BoxFit.cover,
+                                  width: context.width * 0.4,
+                                  height: context.width * 0.4,
+                                  placeholder:
+                                      (context, url) => Icon(
+                                        Icons.person,
+                                        size: context.width * 0.2,
+                                      ),
+                                  errorWidget:
+                                      (context, url, error) => Icon(
+                                        Icons.person,
+                                        size: context.width * 0.2,
+                                      ),
+                                ),
                       ),
                       Positioned(
                         bottom: 10,
                         right: -20,
                         child: MaterialButton(
                           onPressed: () {
-                            _bottomSheet(context);
+                            bottomSheet();
                           },
                           color: AppColors.mainColor,
                           shape: CircleBorder(),
@@ -68,31 +135,31 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   SizedBox(height: context.height * 0.03),
                   Text(
-                    userData.asData?.value?.email ?? '',
+                    currentUserState.data.asData?.value?.email ?? '',
                     style: TextStyle(fontWeight: FontWeight.w400, fontSize: 16),
                   ),
                   SizedBox(height: context.height * 0.03),
                   CustomTextField(
                     labelText: 'Name',
-                    controller: userDataAssests.nameController,
+                    controller: currentUserNotifier.nameController,
                   ),
                   SizedBox(height: context.height * 0.02),
                   CustomTextField(
                     labelText: 'About',
-                    controller: userDataAssests.aboutController,
+                    controller: currentUserNotifier.aboutController,
                   ),
                   SizedBox(height: context.height * 0.03),
                   ElevatedButton.icon(
                     onPressed: () {
-                      userDataAssests.updateData(context);
+                      currentUserNotifier.updateData(context);
                     },
                     label: Text(
-                      userDataAssests.isUpdating
+                      currentUserNotifier.isUpdating
                           ? 'Updating...'
                           : 'Update Profile',
                     ),
                     icon:
-                        userDataAssests.isUpdating
+                        currentUserNotifier.isUpdating
                             ? SizedBox(
                               height: 18,
                               width: 18,
@@ -112,7 +179,7 @@ class ProfileScreen extends ConsumerWidget {
         ),
       ),
       floatingActionButton:
-          userData.asData?.value != null
+          currentUserState.data.asData?.value != null
               ? FloatingActionButton.extended(
                 backgroundColor: AppColors.mainColor,
                 foregroundColor: AppColors.white,
@@ -153,55 +220,6 @@ class ProfileScreen extends ConsumerWidget {
                 label: const Text('Login'),
                 icon: const Icon(Icons.login),
               ),
-    );
-  }
-
-  _bottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (_) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(height: 10),
-            Text(
-              'Pick Profile Picture',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-            ),
-            SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.white,
-                      shape: CircleBorder()
-                  ),
-                  onPressed: () {},
-                  child: Image.asset(
-                    'assets/gallery.png',
-                    height: context.height * .1,
-                    width: context.width * .15,
-                  ),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.white,
-                    shape: CircleBorder()
-                  ),
-                  onPressed: () {},
-                  child: Image.asset(
-                    'assets/camera.jpg',
-                    height: context.height * .1,
-                    width: context.width * .15,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 10),
-          ],
-        );
-      },
     );
   }
 }

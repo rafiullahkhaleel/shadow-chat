@@ -5,7 +5,7 @@ class UserModel {
   final String id;
   final String name;
   final String email;
-  final String image;
+  final String imageUrl;
   final String about;
   final String pushToken;
   final String lastActive;
@@ -16,7 +16,7 @@ class UserModel {
     required this.id,
     required this.name,
     required this.email,
-    required this.image,
+    required this.imageUrl,
     required this.about,
     required this.pushToken,
     required this.lastActive,
@@ -30,7 +30,7 @@ class UserModel {
       id: map['id'] ?? '',
       name: map['name'] ?? 'Unknown',
       email: map['email'] ?? '',
-      image: map['image'] ?? '',
+      imageUrl: map['image'] ?? '',
       about: map['about'] ?? "Hey there! I'm using this app.",
       pushToken: map['pushToken'] ?? '',
       lastActive: map['lastActive'] ?? '',
@@ -55,7 +55,7 @@ class UserModel {
       id: id ?? this.id,
       name: name ?? this.name,
       email: email ?? this.email,
-      image: image ?? this.image,
+      imageUrl: image ?? this.imageUrl,
       about: about ?? this.about,
       pushToken: pushToken ?? this.pushToken,
       lastActive: lastActive ?? this.lastActive,

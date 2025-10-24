@@ -92,7 +92,7 @@ class HomeScreen extends ConsumerWidget {
                 final user = filtered[index];
                 return UserCard(
                   name: user.name,
-                  imageUrl: user.image,
+                  imageUrl: user.imageUrl,
                   isOnline: user.isOnline,
                   lastActive: user.lastActive,
                   about: user.about,
