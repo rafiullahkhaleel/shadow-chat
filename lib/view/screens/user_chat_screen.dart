@@ -38,6 +38,49 @@ class UserChatScreen extends StatelessWidget {
           ),
         ),
       ),
+      body: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Card(
+                  color: Colors.white,
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: () {},
+                        icon: Icon(Icons.emoji_emotions),
+                      ),
+                      Expanded(
+                        child: TextFormField(
+                          decoration: InputDecoration(
+                            hintText: 'Type a message',
+                            border: InputBorder.none,
+                          ),
+                        ),
+                      ),
+                      IconButton(onPressed: () {}, icon: Icon(Icons.photo)),
+                      IconButton(
+                        onPressed: () {},
+                        icon: Icon(Icons.camera_alt),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              MaterialButton(
+                minWidth: 0,
+              padding: EdgeInsets.all(8),
+                onPressed: () {},
+                shape: CircleBorder(),
+                color: AppColors.mainColor,
+                child: Icon(Icons.send,color: Colors.white,
+
+              )),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

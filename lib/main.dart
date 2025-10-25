@@ -53,6 +53,11 @@ class MyApp extends StatelessWidget {
                 fontWeight: FontWeight.w500,
               ),
             )
+          ),
+          iconButtonTheme: IconButtonThemeData(
+            style: IconButton.styleFrom(
+              foregroundColor: AppColors.mainColor,
+            )
           )
         ),
         home: const HomeScreen(),
