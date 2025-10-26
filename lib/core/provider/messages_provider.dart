@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:shadow_chat/core/model/message_model.dart';
 
+final messagesProvider = StateNotifierProvider<MessagesNotifier,MessagesState>((ref){
+  return MessagesNotifier();
+});
+
 class MessagesNotifier extends StateNotifier<MessagesState> {
   MessagesNotifier()
     : super(
@@ -12,16 +16,16 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
               fromId: FirebaseAuth.instance.currentUser!.uid,
               toId: 'xyz',
               msg: 'Hello',
-              sent: 'How are you',
-              read: '12:00 PM',
+              sent: '${DateTime.now().millisecondsSinceEpoch}',
+              read: '${DateTime.now().millisecondsSinceEpoch}',
               type: MessageType.text,
             ),
             MessageModel(
               fromId: 'xyz',
               toId: FirebaseAuth.instance.currentUser!.uid,
               msg: 'How are you?',
-              sent: 'How are you',
-              read: '12:00 PM',
+              sent: '${DateTime.now().millisecondsSinceEpoch}',
+              read: '${DateTime.now().millisecondsSinceEpoch}',
               type: MessageType.text,
             ),
           ]),
