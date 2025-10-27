@@ -1,8 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class UserModel {
-  final String id;
+  final String uid;
   final String name;
   final String email;
   final String imageUrl;
@@ -13,7 +12,7 @@ class UserModel {
   final bool isOnline;
 
   UserModel({
-    required this.id,
+    required this.uid,
     required this.name,
     required this.email,
     required this.imageUrl,
@@ -27,7 +26,7 @@ class UserModel {
   /// ✅ Create safely from Firestore map
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
-      id: map['id'] ?? '',
+      uid: map['uid'] ?? '',
       name: map['name'] ?? 'Unknown',
       email: map['email'] ?? '',
       imageUrl: map['image'] ?? '',
@@ -46,13 +45,6 @@ class UserModel {
   }
 }
 
-final usersProvider = StreamProvider<List<UserModel>>((ref) {
-  return FirebaseFirestore.instance.collection('users').snapshots().map((
-    snapshot,
-  ) {
-    return snapshot.docs.map((doc) => UserModel.fromMap(doc.data())).toList();
-  });
-});
 
 // class UserModel {
 //   final String id;

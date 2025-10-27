@@ -48,7 +48,7 @@ class MessageCard extends StatelessWidget {
           Text(data.msg, style: TextStyle(color: Colors.black87, fontSize: 16)),
           SizedBox(height: 4),
           Text(
-            _formatTime(data.sent),
+            _formatTime(data.send),
             style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
           ),
         ],
@@ -58,14 +58,14 @@ class MessageCard extends StatelessWidget {
 
   Widget _sentMessage(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: Color(0xFFDCF8C6), // WhatsApp green
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(16),
-          topRight: Radius.circular(16),
+          topRight: Radius.circular(0),
           bottomLeft: Radius.circular(16),
-          bottomRight: Radius.circular(0),
+          bottomRight: Radius.circular(16),
         ),
         boxShadow: [
           BoxShadow(
@@ -78,51 +78,62 @@ class MessageCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text(data.msg, style: TextStyle(color: Colors.black87, fontSize: 16)),
-          SizedBox(height: 4),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                _formatTime(data.sent),
-                style: TextStyle(color: Colors.grey.shade700, fontSize: 11),
-              ),
-              SizedBox(width: 4),
-              Icon(
-                Icons.done_all,
-                size: 16,
-                color:
-                    data.read.isNotEmpty
-                        ? Colors.blue.shade400
-                        : Colors.grey.shade600,
+              Text(data.msg, style: TextStyle(color: Colors.black87, fontSize: 16)),
+              SizedBox(width: 8,),
+              Column(
+                children: [
+                  SizedBox(height: 20,),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _formatTime(data.send),
+                        style: TextStyle(color: Colors.grey.shade700, fontSize: 11),
+                      ),
+                      SizedBox(width: 4),
+                      Icon(
+                        Icons.done_all,
+                        size: 16,
+                        color:
+                        data.read.isNotEmpty
+                            ? Colors.blue.shade400
+                            : Colors.grey.shade600,
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),
+
         ],
       ),
     );
   }
 
-  String _formatTime(String timestamp) {
+  String _formatTime(DateTime? timestamp) {
+    if (timestamp == null) {
+      return 'Sending....';
+    }
     try {
-      final dateTime = DateTime.fromMillisecondsSinceEpoch(
-        int.parse(timestamp),
-      );
       final now = DateTime.now();
-      final difference = now.difference(dateTime);
+      final difference = now.difference(timestamp);
 
       if (difference.inDays == 0) {
         // Today - show time only
-        return DateFormat('hh:mm a').format(dateTime);
+        return DateFormat('hh:mm a').format(timestamp);
       } else if (difference.inDays == 1) {
         // Yesterday
         return 'Yesterday';
       } else if (difference.inDays < 7) {
         // Within a week - show day name
-        return DateFormat('EEEE').format(dateTime);
+        return DateFormat('EEEE').format(timestamp);
       } else {
         // Older - show date
-        return DateFormat('dd/MM/yyyy').format(dateTime);
+        return DateFormat('dd/MM/yyyy').format(timestamp);
       }
     } catch (e) {
       return '';

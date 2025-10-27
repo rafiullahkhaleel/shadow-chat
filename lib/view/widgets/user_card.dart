@@ -18,7 +18,7 @@ class UserCard extends StatelessWidget {
           onTap: () {
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (context) => UserChatScreen(data: data),
+                builder: (context) => UserChatScreen(userData: data),
               ),
             );
           },

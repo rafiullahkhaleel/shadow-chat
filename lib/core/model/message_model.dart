@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class MessageModel {
   final String fromId;
   final String toId;
   final String msg;
-  final String sent;
+  final DateTime? send;
   final String read;
   final MessageType type;
 
@@ -10,7 +12,7 @@ class MessageModel {
     required this.fromId,
     required this.toId,
     required this.msg,
-    required this.sent,
+    required this.send,
     required this.read,
     required this.type,
   });
@@ -20,7 +22,7 @@ class MessageModel {
       fromId: map['fromId'] ?? '',
       toId: map['toId'] ?? '',
       msg: map['msg'] ?? '',
-      sent: map['sent'] ?? '',
+      send: map['send'] != null ? (map['send'] as Timestamp).toDate() : null,
       read: map['read'] ?? '',
       type: map['type'] == 'image' ? MessageType.image : MessageType.text,
     );

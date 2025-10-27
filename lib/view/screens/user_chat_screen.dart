@@ -9,13 +9,14 @@ import 'package:shadow_chat/view/widgets/message_card.dart';
 import '../../core/provider/messages_provider.dart';
 
 class UserChatScreen extends ConsumerWidget {
-  final UserModel data;
-  const UserChatScreen({super.key, required this.data});
+  final UserModel userData;
+  const UserChatScreen({super.key, required this.userData});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    String time = DateFormat('hh:mm a').format(data.lastActive!);
-    final messageProvider = ref.watch(messagesProvider);
+    String time = DateFormat('hh:mm a').format(userData.lastActive!);
+    final messageState = ref.watch(messagesProvider(userData.uid));
+    final messageNotifier = ref.read(messagesProvider(userData.uid).notifier);
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -32,10 +33,10 @@ class UserChatScreen extends ConsumerWidget {
           contentPadding: EdgeInsets.zero,
           leading: CircleAvatar(
             radius: 23,
-            backgroundImage: CachedNetworkImageProvider(data.imageUrl),
+            backgroundImage: CachedNetworkImageProvider(userData.imageUrl),
           ),
           title: Text(
-            data.name,
+            userData.name,
             style: TextStyle(color: AppColors.white, fontSize: 17),
           ),
           subtitle: Text(
@@ -46,63 +47,79 @@ class UserChatScreen extends ConsumerWidget {
       ),
       body: Column(
         children: [
-          Expanded(
-            child: messageProvider.data.when(
-              data:
-                  (data) => ListView.builder(
-                    itemCount: data.length,
-                    itemBuilder: (context, index) {
-                      return MessageCard(data: data[index]);
-                    },
+          messageState.data.when(
+            data: (data) {
+              if (data.isEmpty) {
+                return Expanded(
+                  child: Text(
+                    'No Messages',
+                    style: TextStyle(color: Colors.white),
                   ),
-              error:
-                  (error, stack) =>
-                      Center(child: Text('ERROR OCCURRED $error')),
-              loading: () => CircularProgressIndicator(),
-            ),
+                );
+              }
+              return Expanded(
+                child: ListView.builder(
+                  reverse: true,
+                  itemCount: data.length,
+                  itemBuilder: (context, index) {
+                    return MessageCard(data: data[index]);
+                  },
+                ),
+              );
+            },
+            error:
+                (error, stack) => Center(child: Text('ERROR OCCURRED $error')),
+            loading:
+                () =>
+                    Expanded(child: Center(child: CircularProgressIndicator())),
           ),
-          Row(
-            children: [
-              Expanded(
-                child: Card(
-                  margin: EdgeInsets.only(
-                      left: 8, bottom: 8, top: 0),
-                  color: Colors.white,
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: () {},
-                        icon: Icon(Icons.emoji_emotions),
-                      ),
-                      Expanded(
-                        child: TextFormField(
-                          decoration: InputDecoration(
-                            hintText: 'Type a message',
-                            border: InputBorder.none,
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Card(
+                    margin: EdgeInsets.only(left: 8, bottom: 8, top: 0),
+                    color: Colors.white,
+                    child: Row(
+                      children: [
+                        IconButton(
+                          onPressed: () {},
+                          icon: Icon(Icons.emoji_emotions),
+                        ),
+                        Expanded(
+                          child: TextFormField(
+                            controller: messageNotifier.messageController,
+                            decoration: InputDecoration(
+                              hintText: 'Type a message',
+                              border: InputBorder.none,
+                            ),
                           ),
                         ),
-                      ),
-                      IconButton(onPressed: () {}, icon: Icon(Icons.photo)),
-                      IconButton(
-                        onPressed: () {},
-                        icon: Icon(Icons.camera_alt),
-                      ),
-                    ],
+                        IconButton(onPressed: () {}, icon: Icon(Icons.photo)),
+                        IconButton(
+                          onPressed: () {},
+                          icon: Icon(Icons.camera_alt),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: MaterialButton(
-                  minWidth: 0,
-                  padding: EdgeInsets.all(8),
-                  onPressed: () {},
-                  shape: CircleBorder(),
-                  color: AppColors.mainColor,
-                  child: Icon(Icons.send, color: Colors.white),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: MaterialButton(
+                    minWidth: 0,
+                    padding: EdgeInsets.all(8),
+                    onPressed: () {
+                      messageNotifier.sendMessage(userData.uid);
+                    },
+                    shape: CircleBorder(),
+                    color: AppColors.mainColor,
+                    child: Icon(Icons.send, color: Colors.white),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
