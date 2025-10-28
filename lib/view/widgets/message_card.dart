@@ -1,14 +1,17 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadow_chat/core/model/message_model.dart';
 import 'package:intl/intl.dart';
 
-class MessageCard extends StatelessWidget {
+import '../../core/provider/messages_provider.dart';
+
+class MessageCard extends ConsumerWidget {
   final MessageModel data;
   const MessageCard({super.key, required this.data});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     bool isMe = FirebaseAuth.instance.currentUser!.uid == data.fromId;
 
     return Align(
@@ -18,12 +21,18 @@ class MessageCard extends StatelessWidget {
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
         margin: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        child: isMe ? _sentMessage(context) : _receivedMessage(context),
+        child: isMe ? _sentMessage(context) : _receivedMessage(context, ref),
       ),
     );
   }
 
-  Widget _receivedMessage(BuildContext context) {
+  Widget _receivedMessage(BuildContext context, WidgetRef ref) {
+    if (data.read == null) {
+      // Update message status to read
+      ref
+          .read(messagesProvider(data.fromId).notifier)
+          .updateMessageStatus(data);
+    }
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -81,26 +90,32 @@ class MessageCard extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(data.msg, style: TextStyle(color: Colors.black87, fontSize: 16)),
-              SizedBox(width: 8,),
+              Text(
+                data.msg,
+                style: TextStyle(color: Colors.black87, fontSize: 16),
+              ),
+              SizedBox(width: 8),
               Column(
                 children: [
-                  SizedBox(height: 20,),
+                  SizedBox(height: 20),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         _formatTime(data.send),
-                        style: TextStyle(color: Colors.grey.shade700, fontSize: 11),
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontSize: 11,
+                        ),
                       ),
                       SizedBox(width: 4),
                       Icon(
                         Icons.done_all,
                         size: 16,
                         color:
-                        data.read.isNotEmpty
-                            ? Colors.blue.shade400
-                            : Colors.grey.shade600,
+                            data.read != null
+                                ? Colors.blue.shade400
+                                : Colors.grey.shade600,
                       ),
                     ],
                   ),
@@ -108,7 +123,6 @@ class MessageCard extends StatelessWidget {
               ),
             ],
           ),
-
         ],
       ),
     );

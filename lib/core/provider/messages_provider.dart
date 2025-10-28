@@ -39,10 +39,9 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
           _firestore.collection('chat/${getConversationId(id)}/messages').doc();
       await docRef.set({
         'toId': id,
-        'docsId' : docRef.id,
+        'docsId': docRef.id,
         'fromId': currentUser.uid,
         'msg': text,
-        'read': '',
         'send': FieldValue.serverTimestamp(),
         'type': 'text',
       });
@@ -50,6 +49,13 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
     } catch (e) {
       debugPrint('ERROR OCCURRED$e');
     }
+  }
+
+  Future<void> updateMessageStatus(MessageModel message) async {
+    _firestore
+        .collection('chat/${getConversationId(message.fromId)}/messages')
+        .doc(message.docsId)
+        .update({'read': FieldValue.serverTimestamp()});
   }
 
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
