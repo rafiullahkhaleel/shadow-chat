@@ -21,6 +21,7 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
     : super(MessagesState(data: AsyncValue.loading())) {
     fetchMessages(receiverId);
     fetchLastMessage(receiverId);
+    initFocusListener();
   }
   final currentUser = FirebaseAuth.instance.currentUser!;
   final _firestore = FirebaseFirestore.instance;
@@ -109,10 +110,32 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
         );
   }
 
+  final FocusNode focusNode = FocusNode();
+
+  void initFocusListener() {
+    focusNode.addListener(() {
+      if (focusNode.hasFocus && state.showEmoji) {
+        state = state.copyWith(showEmoji: false);
+      }
+    });
+  }
+
+  void toggleEmoji(BuildContext context) async {
+    if (!state.showEmoji) {
+      FocusScope.of(context).unfocus();
+      await Future.delayed(const Duration(milliseconds: 200));
+    } else {
+      FocusScope.of(context).requestFocus(focusNode);
+    }
+    state = state.copyWith(showEmoji: !state.showEmoji);
+  }
+
   @override
   void dispose() {
     _messagesSubscription?.cancel();
     messageController.dispose();
+    messageController.dispose();
+    focusNode.dispose();
     super.dispose();
   }
 }
@@ -120,16 +143,19 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
 class MessagesState {
   final AsyncValue<List<MessageModel>> data;
   final AsyncValue<MessageModel>? lastMessage;
+  final bool showEmoji;
 
-  MessagesState({required this.data, this.lastMessage});
+  MessagesState({required this.data, this.lastMessage, this.showEmoji = false});
 
   MessagesState copyWith({
     AsyncValue<List<MessageModel>>? data,
     AsyncValue<MessageModel>? lastMessage,
+    bool? showEmoji,
   }) {
     return MessagesState(
       data: data ?? this.data,
       lastMessage: lastMessage ?? this.lastMessage,
+      showEmoji: showEmoji ?? this.showEmoji,
     );
   }
 }

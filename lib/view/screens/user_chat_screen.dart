@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -84,11 +85,18 @@ class UserChatScreen extends ConsumerWidget {
                     child: Row(
                       children: [
                         IconButton(
-                          onPressed: () {},
-                          icon: Icon(Icons.emoji_emotions),
+                          onPressed: () {
+                            messageNotifier.toggleEmoji(context);
+                          },
+                          icon: Icon(
+                            messageState.showEmoji
+                                ? Icons.keyboard_alt
+                                : Icons.emoji_emotions,
+                          ),
                         ),
                         Expanded(
                           child: TextFormField(
+                            focusNode: messageNotifier.focusNode,
                             controller: messageNotifier.messageController,
                             decoration: InputDecoration(
                               hintText: 'Type a message',
@@ -119,6 +127,22 @@ class UserChatScreen extends ConsumerWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+          Offstage(
+            offstage: !messageState.showEmoji,
+            child: SizedBox(
+              height: 250,
+              child: EmojiPicker(
+                onEmojiSelected: (category, emoji) {
+                  messageNotifier.messageController.text += emoji.emoji;
+                },
+                config: Config(
+                  height: 256,
+                  emojiViewConfig: EmojiViewConfig(emojiSizeMax: 28),
+                  categoryViewConfig: const CategoryViewConfig(),
+                ),
+              ),
             ),
           ),
         ],
