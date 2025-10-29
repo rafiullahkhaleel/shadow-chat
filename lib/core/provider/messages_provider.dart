@@ -20,6 +20,7 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
   MessagesNotifier(this.receiverId)
     : super(MessagesState(data: AsyncValue.loading())) {
     fetchMessages(receiverId);
+    fetchLastMessage(receiverId);
   }
   final currentUser = FirebaseAuth.instance.currentUser!;
   final _firestore = FirebaseFirestore.instance;
@@ -84,6 +85,30 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
         );
   }
 
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
+  _lastMessageSubscription;
+  Future<void> fetchLastMessage(String fromId) async {
+    await _lastMessageSubscription?.cancel();
+    _lastMessageSubscription = _firestore
+        .collection('chat/${getConversationId(fromId)}/messages')
+        .orderBy('send', descending: true)
+        .limit(1)
+        .snapshots()
+        .listen(
+          (snapshot) {
+            if (snapshot.docs.isNotEmpty) {
+              final lastMessage = MessageModel.fromMap(
+                snapshot.docs.first.data(),
+              );
+              state = state.copyWith(lastMessage: AsyncValue.data(lastMessage));
+            }
+          },
+          onError: (error, stack) {
+            state = state.copyWith(lastMessage: AsyncValue.error(error, stack));
+          },
+        );
+  }
+
   @override
   void dispose() {
     _messagesSubscription?.cancel();
@@ -94,10 +119,17 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
 
 class MessagesState {
   final AsyncValue<List<MessageModel>> data;
+  final AsyncValue<MessageModel>? lastMessage;
 
-  MessagesState({required this.data});
+  MessagesState({required this.data, this.lastMessage});
 
-  MessagesState copyWith({AsyncValue<List<MessageModel>>? data}) {
-    return MessagesState(data: data ?? this.data);
+  MessagesState copyWith({
+    AsyncValue<List<MessageModel>>? data,
+    AsyncValue<MessageModel>? lastMessage,
+  }) {
+    return MessagesState(
+      data: data ?? this.data,
+      lastMessage: lastMessage ?? this.lastMessage,
+    );
   }
 }

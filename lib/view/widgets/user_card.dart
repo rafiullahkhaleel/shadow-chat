@@ -1,12 +1,16 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shadow_chat/core/model/message_model.dart';
 import 'package:shadow_chat/core/model/user_model.dart';
+import 'package:shadow_chat/core/utils/date_time_helper.dart';
 import 'package:shadow_chat/view/screens/user_chat_screen.dart';
 
 class UserCard extends StatelessWidget {
   final UserModel data;
+  final MessageModel? lastMessage;
 
-  const UserCard({super.key, required this.data});
+  const UserCard({super.key, required this.data, this.lastMessage});
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +45,7 @@ class UserCard extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
           ),
           subtitle: Text(
-            data.isOnline ? 'Online' : data.about,
+            lastMessage?.msg ?? '',
             style: TextStyle(color: Colors.grey, fontSize: 14),
             overflow: TextOverflow.ellipsis,
           ),
@@ -50,18 +54,18 @@ class UserCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                data.lastActive.toString(),
+                DateTimeHelper.formatTime(lastMessage?.send),
                 style: TextStyle(color: Colors.grey, fontSize: 12),
               ),
               const SizedBox(height: 6),
-              CircleAvatar(
-                radius: 9,
-                backgroundColor: Colors.green,
-                child: const Text(
-                  '2',
-                  style: TextStyle(color: Colors.white, fontSize: 10),
-                ),
-              ),
+              lastMessage != null && lastMessage?.read == null &&
+                      lastMessage?.fromId !=
+                          FirebaseAuth.instance.currentUser!.uid
+                  ? CircleAvatar(
+                    radius: 6,
+                    backgroundColor: Colors.green,
+                  )
+                  : SizedBox.shrink(),
             ],
           ),
         ),

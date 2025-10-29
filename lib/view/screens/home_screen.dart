@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadow_chat/core/contants/constants.dart';
+import 'package:shadow_chat/core/provider/messages_provider.dart';
 import 'package:shadow_chat/view/screens/profile_screen.dart';
 import 'package:shadow_chat/view/widgets/user_card.dart';
 import '../../core/provider/users_data_provider.dart';
@@ -90,7 +91,12 @@ class HomeScreen extends ConsumerWidget {
               physics: const BouncingScrollPhysics(),
               itemBuilder: (context, index) {
                 final user = filtered[index];
-                return UserCard(data: user);
+                final lastMessage =
+                    ref.watch(messagesProvider(user.uid)).lastMessage;
+                return UserCard(
+                  data: user,
+                  lastMessage: lastMessage?.asData?.value,
+                );
               },
             );
           },
