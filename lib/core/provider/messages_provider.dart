@@ -5,7 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shadow_chat/core/model/message_model.dart';
+import 'package:shadow_chat/core/services/image_service.dart';
 
 final messagesProvider =
     StateNotifierProvider.family<MessagesNotifier, MessagesState, String>((
@@ -45,9 +47,30 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
         'fromId': currentUser.uid,
         'msg': text,
         'send': FieldValue.serverTimestamp(),
-        'type': 'text',
+        'type': MessageType.text.name,
       });
       messageController.clear();
+    } catch (e) {
+      debugPrint('ERROR OCCURRED$e');
+    }
+  }
+
+  Future<void> sendImage(ImageSource source)async{
+    final pickedImage = await ImageService().imagePicker(source);
+    if(pickedImage==null) return;
+    final filePath = 'chat/${getConversationId(receiverId)}/${DateTime.now().millisecondsSinceEpoch}';
+    final imageUrl = await ImageService().uploadImage(pickedImage, filePath);
+    try {
+      DocumentReference docRef =
+      _firestore.collection('chat/${getConversationId(receiverId)}/messages').doc();
+      await docRef.set({
+        'toId': receiverId,
+        'docsId': docRef.id,
+        'fromId': currentUser.uid,
+        'msg': imageUrl,
+        'send': FieldValue.serverTimestamp(),
+        'type': MessageType.image.name,
+      });
     } catch (e) {
       debugPrint('ERROR OCCURRED$e');
     }

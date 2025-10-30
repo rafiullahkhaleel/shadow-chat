@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:shadow_chat/core/contants/constants.dart';
 import 'package:shadow_chat/core/model/user_model.dart';
@@ -104,9 +105,13 @@ class UserChatScreen extends ConsumerWidget {
                             ),
                           ),
                         ),
-                        IconButton(onPressed: () {}, icon: Icon(Icons.photo)),
+                        IconButton(onPressed: () {
+                          messageNotifier.sendImage(ImageSource.gallery);
+                        }, icon: Icon(Icons.photo)),
                         IconButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            messageNotifier.sendImage(ImageSource.camera);
+                          },
                           icon: Icon(Icons.camera_alt),
                         ),
                       ],
@@ -132,7 +137,7 @@ class UserChatScreen extends ConsumerWidget {
           Offstage(
             offstage: !messageState.showEmoji,
             child: SizedBox(
-              height: 250,
+              height: 260,
               child: EmojiPicker(
                 onEmojiSelected: (category, emoji) {
                   messageNotifier.messageController.text += emoji.emoji;
