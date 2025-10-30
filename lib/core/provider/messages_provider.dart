@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -55,14 +56,45 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
     }
   }
 
-  Future<void> sendImage(ImageSource source)async{
+  Future<void> sendImage(ImageSource source) async {
     final pickedImage = await ImageService().imagePicker(source);
-    if(pickedImage==null) return;
-    final filePath = 'chat/${getConversationId(receiverId)}/${DateTime.now().millisecondsSinceEpoch}';
-    final imageUrl = await ImageService().uploadImage(pickedImage, filePath);
+    if (pickedImage == null) return;
+
+    // Generate temporary ID for the message
+    final tempId = DateTime.now().millisecondsSinceEpoch.toString();
+
+    // Create temporary message with local image path
+    final tempMessage = MessageModel(
+      docsId: tempId,
+      fromId: currentUser.uid,
+      toId: receiverId,
+      msg: pickedImage.path, // Local path temporarily
+      type: MessageType.image,
+      send: DateTime.now(),
+      read: null,
+      uploadProgress: 0.0,
+      isUploading: true,
+      localImagePath: pickedImage.path,
+    );
+
+    // Add temporary message to UI immediately
+    _addTempMessageToUI(tempMessage);
+
     try {
+      final filePath =
+          'chat/${getConversationId(receiverId)}/${DateTime.now().millisecondsSinceEpoch}';
+      // Upload with progress tracking
+      final imageUrl = await ImageService().uploadImageWithProgress(
+        pickedImage,
+        filePath,
+        onProgress: (progress) {
+          _updateUploadProgress(tempId, progress);
+        },
+      );
       DocumentReference docRef =
-      _firestore.collection('chat/${getConversationId(receiverId)}/messages').doc();
+          _firestore
+              .collection('chat/${getConversationId(receiverId)}/messages')
+              .doc();
       await docRef.set({
         'toId': receiverId,
         'docsId': docRef.id,
@@ -71,8 +103,114 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
         'send': FieldValue.serverTimestamp(),
         'type': MessageType.image.name,
       });
+      // Remove temporary message (Firestore will add the real one)
+      _removeTempMessage(tempId);
     } catch (e) {
       debugPrint('ERROR OCCURRED$e');
+      // Mark message as failed
+      _markMessageAsFailed(tempId);
+    }
+  }
+
+  void _addTempMessageToUI(MessageModel message) {
+    state.data.whenData((messages) {
+      final updatedMessages = [message, ...messages];
+      state = state.copyWith(data: AsyncValue.data(updatedMessages));
+    });
+  }
+
+  void _updateUploadProgress(String tempId, double progress) {
+    state.data.whenData((messages) {
+      final updatedMessages =
+          messages.map((msg) {
+            if (msg.docsId == tempId) {
+              return MessageModel(
+                docsId: msg.docsId,
+                fromId: msg.fromId,
+                toId: msg.toId,
+                msg: msg.msg,
+                type: msg.type,
+                send: msg.send,
+                read: msg.read,
+                uploadProgress: progress,
+                isUploading: true,
+                localImagePath: msg.localImagePath,
+              );
+            }
+            return msg;
+          }).toList();
+      state = state.copyWith(data: AsyncValue.data(updatedMessages));
+    });
+  }
+
+  void _removeTempMessage(String tempId) {
+    state.data.whenData((messages) {
+      final updatedMessages =
+          messages.where((msg) => msg.docsId != tempId).toList();
+      state = state.copyWith(data: AsyncValue.data(updatedMessages));
+    });
+  }
+
+  void _markMessageAsFailed(String tempId) {
+    state.data.whenData((messages) {
+      final updatedMessages =
+          messages.map((msg) {
+            if (msg.docsId == tempId) {
+              return MessageModel(
+                docsId: msg.docsId,
+                fromId: msg.fromId,
+                toId: msg.toId,
+                msg: msg.msg,
+                type: msg.type,
+                send: msg.send,
+                read: msg.read,
+                uploadProgress: null,
+                isUploading: false,
+                localImagePath: msg.localImagePath,
+                uploadFailed: true,
+              );
+            }
+            return msg;
+          }).toList();
+      state = state.copyWith(data: AsyncValue.data(updatedMessages));
+    });
+  }
+
+  Future<void> retryUpload(MessageModel message) async {
+    if (message.localImagePath == null) return;
+
+    _updateUploadProgress(message.docsId, 0.0);
+
+    try {
+      final filePath =
+          'chat/${getConversationId(receiverId)}/${DateTime.now().millisecondsSinceEpoch}';
+
+      final imageUrl = await ImageService().uploadImageWithProgress(
+        File(message.localImagePath!),
+        filePath,
+        onProgress: (progress) {
+          _updateUploadProgress(message.docsId, progress);
+        },
+      );
+
+      DocumentReference docRef =
+          _firestore
+              .collection('chat/${getConversationId(receiverId)}/messages')
+              .doc();
+
+      await docRef.set({
+        'toId': receiverId,
+        'docsId': docRef.id,
+        'fromId': currentUser.uid,
+        'msg': imageUrl,
+        'send': FieldValue.serverTimestamp(),
+        'type': MessageType.image.name,
+      });
+
+      _removeTempMessage(message.docsId);
+    } catch (e) {
+      debugPrint('RETRY ERROR: $e');
+      _markMessageAsFailed(message.docsId);
     }
   }
 

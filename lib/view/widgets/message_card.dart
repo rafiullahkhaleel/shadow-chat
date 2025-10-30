@@ -1,10 +1,10 @@
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadow_chat/core/model/message_model.dart';
 import 'package:intl/intl.dart';
-
 import '../../core/provider/messages_provider.dart';
 
 class MessageCard extends ConsumerWidget {
@@ -22,14 +22,14 @@ class MessageCard extends ConsumerWidget {
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
         margin: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        child: isMe ? _sentMessage(context) : _receivedMessage(context, ref),
+        child:
+            isMe ? _sentMessage(context, ref) : _receivedMessage(context, ref),
       ),
     );
   }
 
   Widget _receivedMessage(BuildContext context, WidgetRef ref) {
-    if (data.read == null) {
-      // Update message status to read
+    if (data.read == null && !data.isUploading) {
       ref
           .read(messagesProvider(data.fromId).notifier)
           .updateMessageStatus(data);
@@ -59,7 +59,7 @@ class MessageCard extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           data.type == MessageType.image
-              ? _buildWhatsAppImage(data.msg, isMe: false)
+              ? _buildWhatsAppImage(context, ref, data.msg, isMe: false)
               : Text(
                 data.msg,
                 style: TextStyle(color: Colors.black87, fontSize: 16),
@@ -90,14 +90,14 @@ class MessageCard extends ConsumerWidget {
     );
   }
 
-  Widget _sentMessage(BuildContext context) {
+  Widget _sentMessage(BuildContext context, WidgetRef ref) {
     return Container(
       padding:
           data.type == MessageType.image
               ? EdgeInsets.all(4)
               : EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Color(0xFFDCF8C6), // WhatsApp green
+        color: Color(0xFFDCF8C6),
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(16),
           topRight: Radius.circular(0),
@@ -116,7 +116,7 @@ class MessageCard extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           data.type == MessageType.image
-              ? _buildWhatsAppImage(data.msg, isMe: true)
+              ? _buildWhatsAppImage(context, ref, data.msg, isMe: true)
               : Text(
                 data.msg,
                 style: TextStyle(color: Colors.black87, fontSize: 16),
@@ -133,7 +133,10 @@ class MessageCard extends ConsumerWidget {
                 Text(
                   _formatTime(data.send),
                   style: TextStyle(
-                    color: Colors.grey.shade700,
+                    color:
+                        data.type == MessageType.image
+                            ? Colors.white
+                            : Colors.grey.shade700,
                     fontSize: 11,
                     shadows:
                         data.type == MessageType.image
@@ -142,14 +145,8 @@ class MessageCard extends ConsumerWidget {
                   ),
                 ),
                 SizedBox(width: 4),
-                Icon(
-                  Icons.done_all,
-                  size: 16,
-                  color:
-                      data.read != null
-                          ? Colors.blue.shade400
-                          : Colors.grey.shade600,
-                ),
+                // Show clock icon for uploading, checkmarks for sent
+                _buildMessageStatusIcon(),
               ],
             ),
           ),
@@ -158,126 +155,271 @@ class MessageCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildWhatsAppImage(String imageUrl, {required bool isMe}) {
+  Widget _buildMessageStatusIcon() {
+    if (data.isUploading) {
+      return Icon(
+        Icons.access_time,
+        size: 16,
+        color:
+            data.type == MessageType.image
+                ? Colors.white70
+                : Colors.grey.shade600,
+      );
+    } else if (data.uploadFailed) {
+      return Icon(Icons.error_outline, size: 16, color: Colors.red.shade400);
+    } else {
+      return Icon(
+        Icons.done_all,
+        size: 16,
+        color:
+            data.read != null
+                ? Colors.blue.shade400
+                : (data.type == MessageType.image
+                    ? Colors.white70
+                    : Colors.grey.shade600),
+      );
+    }
+  }
+
+  Widget _buildWhatsAppImage(
+    BuildContext context,
+    WidgetRef ref,
+    String imagePath, {
+    required bool isMe,
+  }) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: Stack(
         children: [
-          CachedNetworkImage(
-            imageUrl: imageUrl,
+          // Show local image if uploading, otherwise network image
+          if (data.isUploading && data.localImagePath != null)
+            _buildLocalImage(data.localImagePath!)
+          else if (!data.uploadFailed)
+            _buildNetworkImage(context, imagePath)
+          else
+            _buildFailedImage(context, ref),
+
+          // Upload progress overlay
+          if (data.isUploading && data.uploadProgress != null)
+            _buildUploadProgressOverlay(),
+
+          // Retry button for failed uploads
+          if (data.uploadFailed && isMe) _buildRetryButton(context, ref),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocalImage(String localPath) {
+    return Image.file(
+      File(localPath),
+      width: 250,
+      height: 250,
+      fit: BoxFit.cover,
+    );
+  }
+
+  Widget _buildNetworkImage(BuildContext context, String imageUrl) {
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
+      width: 250,
+      height: 250,
+      fit: BoxFit.cover,
+      placeholder:
+          (context, url) => Container(
             width: 250,
             height: 250,
-            fit: BoxFit.cover,
-            placeholder:
-                (context, url) => Container(
-                  width: 250,
-                  height: 250,
-                  color: Colors.grey.shade200,
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.grey.shade400,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Loading...',
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            errorWidget:
-                (context, url, error) => Container(
-                  width: 250,
-                  height: 250,
-                  color: Colors.grey.shade300,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.broken_image_outlined,
-                        size: 48,
-                        color: Colors.grey.shade600,
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Failed to load image',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 12,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      TextButton(
-                        onPressed: () {
-                          // Retry logic can be added here
-                        },
-                        child: Text(
-                          'Tap to retry',
-                          style: TextStyle(
-                            color: Colors.blue.shade600,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-            imageBuilder:
-                (context, imageProvider) => GestureDetector(
-                  onTap: () {
-                    // Open image in full screen
-                    _openImageFullScreen(context, imageUrl);
-                  },
-                  child: Container(
-                    width: 250,
-                    height: 250,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: imageProvider,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.transparent,
-                            Colors.black.withOpacity(0.3),
-                          ],
-                          stops: [0.0, 0.7, 1.0],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-          ),
-          // Download icon overlay (optional)
-          Positioned(
-            top: 8,
-            right: 8,
-            child: Container(
-              padding: EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: Colors.black45,
-                shape: BoxShape.circle,
+            color: Colors.grey.shade200,
+            child: Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.grey.shade400),
               ),
-              child: Icon(Icons.download, color: Colors.white, size: 18),
             ),
           ),
-        ],
+      errorWidget:
+          (context, url, error) => Container(
+            width: 250,
+            height: 250,
+            color: Colors.grey.shade300,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.broken_image_outlined,
+                  size: 48,
+                  color: Colors.grey.shade600,
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Failed to load',
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+      imageBuilder:
+          (context, imageProvider) => GestureDetector(
+            onTap: () => _openImageFullScreen(context, imageUrl),
+            child: Container(
+              width: 250,
+              height: 250,
+              decoration: BoxDecoration(
+                image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.3),
+                    ],
+                    stops: [0.0, 0.7, 1.0],
+                  ),
+                ),
+              ),
+            ),
+          ),
+    );
+  }
+
+  Widget _buildUploadProgressOverlay() {
+    return Positioned.fill(
+      child: Container(
+        color: Colors.black38,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: CircularProgressIndicator(
+                      value: data.uploadProgress,
+                      strokeWidth: 4,
+                      backgroundColor: Colors.white24,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                  Icon(Icons.upload, color: Colors.white, size: 28),
+                ],
+              ),
+              SizedBox(height: 12),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${(data.uploadProgress! * 100).toInt()}%',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFailedImage(BuildContext context, WidgetRef ref) {
+    return Container(
+      width: 250,
+      height: 250,
+      color: Colors.grey.shade300,
+      child:
+          data.localImagePath != null
+              ? Stack(
+                children: [
+                  Image.file(
+                    File(data.localImagePath!),
+                    width: 250,
+                    height: 250,
+                    fit: BoxFit.cover,
+                  ),
+                  Container(
+                    width: 250,
+                    height: 250,
+                    color: Colors.black54,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: Colors.white,
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Upload Failed',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              )
+              : Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Colors.grey.shade600,
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Upload Failed',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+    );
+  }
+
+  Widget _buildRetryButton(BuildContext context, WidgetRef ref) {
+    return Positioned(
+      bottom: 12,
+      left: 0,
+      right: 0,
+      child: Center(
+        child: ElevatedButton.icon(
+          onPressed: () {
+            ref.read(messagesProvider(data.toId).notifier).retryUpload(data);
+          },
+          icon: Icon(Icons.refresh, size: 18),
+          label: Text('Retry'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black87,
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -295,13 +437,13 @@ class MessageCard extends ConsumerWidget {
                   IconButton(
                     icon: Icon(Icons.download),
                     onPressed: () {
-                      // Implement download functionality
+                      // Implement download
                     },
                   ),
                   IconButton(
                     icon: Icon(Icons.share),
                     onPressed: () {
-                      // Implement share functionality
+                      // Implement share
                     },
                   ),
                 ],
@@ -338,16 +480,12 @@ class MessageCard extends ConsumerWidget {
       final difference = now.difference(timestamp);
 
       if (difference.inDays == 0) {
-        // Today - show time only
         return DateFormat('hh:mm a').format(timestamp);
       } else if (difference.inDays == 1) {
-        // Yesterday
         return 'Yesterday';
       } else if (difference.inDays < 7) {
-        // Within a week - show day name
         return DateFormat('EEEE').format(timestamp);
       } else {
-        // Older - show date
         return DateFormat('dd/MM/yyyy').format(timestamp);
       }
     } catch (e) {
@@ -355,155 +493,3 @@ class MessageCard extends ConsumerWidget {
     }
   }
 }
-
-// import 'package:cached_network_image/cached_network_image.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:flutter/material.dart';
-// import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:shadow_chat/core/model/message_model.dart';
-// import 'package:intl/intl.dart';
-//
-// import '../../core/provider/messages_provider.dart';
-//
-// class MessageCard extends ConsumerWidget {
-//   final MessageModel data;
-//   const MessageCard({super.key, required this.data});
-//
-//   @override
-//   Widget build(BuildContext context, WidgetRef ref) {
-//     bool isMe = FirebaseAuth.instance.currentUser!.uid == data.fromId;
-//
-//     return Align(
-//       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-//       child: Container(
-//         constraints: BoxConstraints(
-//           maxWidth: MediaQuery.of(context).size.width * 0.75,
-//         ),
-//         margin: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-//         child: isMe ? _sentMessage(context) : _receivedMessage(context, ref),
-//       ),
-//     );
-//   }
-//
-//   Widget _receivedMessage(BuildContext context, WidgetRef ref) {
-//     if (data.read == null) {
-//       // Update message status to read
-//       ref
-//           .read(messagesProvider(data.fromId).notifier)
-//           .updateMessageStatus(data);
-//     }
-//     return Container(
-//       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-//       decoration: BoxDecoration(
-//         color: Colors.white,
-//         borderRadius: BorderRadius.only(
-//           topLeft: Radius.circular(16),
-//           topRight: Radius.circular(16),
-//           bottomRight: Radius.circular(16),
-//           bottomLeft: Radius.circular(0),
-//         ),
-//         boxShadow: [
-//           BoxShadow(
-//             color: Colors.black.withOpacity(0.05),
-//             blurRadius: 5,
-//             offset: Offset(0, 2),
-//           ),
-//         ],
-//       ),
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.end,
-//         children: [
-//           data.type == MessageType.image
-//               ? CachedNetworkImage(imageUrl: data.msg)
-//               : Text(
-//                 data.msg,
-//                 style: TextStyle(color: Colors.black87, fontSize: 16),
-//               ),
-//           SizedBox(height: 4),
-//           Text(
-//             _formatTime(data.send),
-//             style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Widget _sentMessage(BuildContext context) {
-//     return Container(
-//       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-//       decoration: BoxDecoration(
-//         color: Color(0xFFDCF8C6), // WhatsApp green
-//         borderRadius: BorderRadius.only(
-//           topLeft: Radius.circular(16),
-//           topRight: Radius.circular(0),
-//           bottomLeft: Radius.circular(16),
-//           bottomRight: Radius.circular(16),
-//         ),
-//         boxShadow: [
-//           BoxShadow(
-//             color: Colors.black.withOpacity(0.05),
-//             blurRadius: 5,
-//             offset: Offset(0, 2),
-//           ),
-//         ],
-//       ),
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.end,
-//         children: [
-//           data.type == MessageType.image
-//               ? CachedNetworkImage(imageUrl: data.msg)
-//               : Text(
-//                 data.msg,
-//                 style: TextStyle(color: Colors.black87, fontSize: 16),
-//               ),
-//           SizedBox(width: 4),
-//           Row(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               Text(
-//                 _formatTime(data.send),
-//                 style: TextStyle(color: Colors.grey.shade700, fontSize: 11),
-//               ),
-//               SizedBox(width: 4),
-//               Icon(
-//                 Icons.done_all,
-//                 size: 16,
-//                 color:
-//                     data.read != null
-//                         ? Colors.blue.shade400
-//                         : Colors.grey.shade600,
-//               ),
-//             ],
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   String _formatTime(DateTime? timestamp) {
-//     if (timestamp == null) {
-//       return 'Sending....';
-//     }
-//     try {
-//       final now = DateTime.now();
-//       final difference = now.difference(timestamp);
-//
-//       if (difference.inDays == 0) {
-//         // Today - show time only
-//         return DateFormat('hh:mm a').format(timestamp);
-//       } else if (difference.inDays == 1) {
-//         // Yesterday
-//         return 'Yesterday';
-//       } else if (difference.inDays < 7) {
-//         // Within a week - show day name
-//         return DateFormat('EEEE').format(timestamp);
-//       } else {
-//         // Older - show date
-//         return DateFormat('dd/MM/yyyy').format(timestamp);
-//       }
-//     } catch (e) {
-//       return '';
-//     }
-//   }
-// }
