@@ -42,7 +42,7 @@ class UserChatScreen extends ConsumerWidget {
             style: TextStyle(color: AppColors.white, fontSize: 17),
           ),
           subtitle: Text(
-            'last seen today at $time',
+            userData.isOnline ? 'online' : 'last seen today at $time',
             style: TextStyle(color: AppColors.white, fontSize: 13),
           ),
         ),
@@ -105,9 +105,12 @@ class UserChatScreen extends ConsumerWidget {
                             ),
                           ),
                         ),
-                        IconButton(onPressed: () {
-                          messageNotifier.sendImage(ImageSource.gallery);
-                        }, icon: Icon(Icons.photo)),
+                        IconButton(
+                          onPressed: () {
+                            messageNotifier.sendImage(ImageSource.gallery);
+                          },
+                          icon: Icon(Icons.photo),
+                        ),
                         IconButton(
                           onPressed: () {
                             messageNotifier.sendImage(ImageSource.camera);

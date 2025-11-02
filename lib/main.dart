@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadow_chat/core/extensions/context_extension.dart';
+import 'package:shadow_chat/core/services/online_status_handler.dart';
 import 'package:shadow_chat/view/screens/splash_screen.dart';
 
 import 'core/contants/constants.dart';
@@ -10,7 +11,7 @@ import 'firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(const MyApp());
+  runApp(OnlineStatusHandler(child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -47,17 +48,12 @@ class MyApp extends StatelessWidget {
                 horizontal: context.width * 0.05,
                 vertical: context.height * 0.015,
               ),
-              textStyle: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            )
+              textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
           ),
           iconButtonTheme: IconButtonThemeData(
-            style: IconButton.styleFrom(
-              foregroundColor: AppColors.mainColor,
-            )
-          )
+            style: IconButton.styleFrom(foregroundColor: AppColors.mainColor),
+          ),
         ),
         home: const SplashScreen(),
       ),
