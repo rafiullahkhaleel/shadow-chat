@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:shadow_chat/core/contants/constants.dart';
 import 'package:shadow_chat/core/model/user_model.dart';
+import 'package:shadow_chat/view/screens/user_profile_view.dart';
 import 'package:shadow_chat/view/widgets/message_card.dart';
 
 import '../../core/provider/messages_provider.dart';
@@ -33,6 +34,11 @@ class UserChatScreen extends ConsumerWidget {
         ),
         title: ListTile(
           contentPadding: EdgeInsets.zero,
+          onTap: () {
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (context) => UserProfileView(userData : userData)));
+          },
           leading: CircleAvatar(
             radius: 23,
             backgroundImage: CachedNetworkImageProvider(userData.imageUrl),
