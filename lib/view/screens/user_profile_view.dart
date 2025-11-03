@@ -55,7 +55,7 @@ class UserProfileView extends StatelessWidget {
                   ),
                   children: [
                     TextSpan(
-                      text: userData.about*10,
+                      text: userData.about,
                       style: const TextStyle(fontWeight: FontWeight.normal,fontSize: 17),
                     ),
                   ],

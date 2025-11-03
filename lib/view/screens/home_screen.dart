@@ -94,7 +94,7 @@ class HomeScreen extends ConsumerWidget {
                 final lastMessage =
                     ref.watch(messagesProvider(user.uid)).lastMessage;
                 return UserCard(
-                  data: user,
+                  userData: user,
                   lastMessage: lastMessage?.asData?.value,
                 );
               },
