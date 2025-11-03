@@ -5,12 +5,13 @@ import 'package:shadow_chat/core/model/message_model.dart';
 import 'package:shadow_chat/core/model/user_model.dart';
 import 'package:shadow_chat/core/utils/date_time_helper.dart';
 import 'package:shadow_chat/view/screens/user_chat_screen.dart';
+import 'package:shadow_chat/view/widgets/profile_dialog.dart';
 
 class UserCard extends StatelessWidget {
-  final UserModel data;
+  final UserModel userData;
   final MessageModel? lastMessage;
 
-  const UserCard({super.key, required this.data, this.lastMessage});
+  const UserCard({super.key, required this.userData, this.lastMessage});
 
   @override
   Widget build(BuildContext context) {
@@ -22,24 +23,29 @@ class UserCard extends StatelessWidget {
           onTap: () {
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (context) => UserChatScreen(userData: data),
+                builder: (context) => UserChatScreen(userData: userData),
               ),
             );
           },
           contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-          leading: ClipRRect(
-            borderRadius: BorderRadius.circular(50),
-            child: CachedNetworkImage(
-              imageUrl: data.imageUrl,
-              width: 50,
-              height: 50,
-              fit: BoxFit.cover,
-              placeholder: (context, url) => Icon(Icons.person),
-              errorWidget: (context, url, error) => Icon(Icons.person),
+          leading: InkWell(
+            onTap: (){
+              showDialog(context: context, builder: (context)=>ProfileDialog(userData: userData));
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(50),
+              child: CachedNetworkImage(
+                imageUrl: userData.imageUrl,
+                width: 50,
+                height: 50,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Icon(Icons.person),
+                errorWidget: (context, url, error) => Icon(Icons.person),
+              ),
             ),
           ),
           title: Text(
-            data.name,
+            userData.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
