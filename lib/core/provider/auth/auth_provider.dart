@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shadow_chat/core/provider/auth/auth_state.dart';
+import 'package:shadow_chat/core/provider/auth/notification_provider.dart';
 import 'package:shadow_chat/core/provider/current_user_data.dart';
 import 'package:shadow_chat/core/provider/users_data_provider.dart';
 import 'package:shadow_chat/view/screens/home_screen.dart';
@@ -61,7 +62,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
             'createdAt': FieldValue.serverTimestamp(),
             'isOnline': true,
             'lastActive': FieldValue.serverTimestamp(),
-            'pushToken': '',
           });
         } else {
           await userDoc.update({
@@ -75,6 +75,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(isLoading: false);
       final container = ProviderScope.containerOf(context, listen: false);
       container.refresh(currentUserDataProvider);
+     await container.read(notificationProvider.notifier).initToken();
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => HomeScreen()),
