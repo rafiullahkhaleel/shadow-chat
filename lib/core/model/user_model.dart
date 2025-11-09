@@ -6,7 +6,7 @@ class UserModel {
   final String email;
   final String imageUrl;
   final String about;
-  final String pushToken;
+  final String? fcmToken;
   final DateTime? lastActive;
   final DateTime? createdAt;
   final bool isOnline;
@@ -17,7 +17,7 @@ class UserModel {
     required this.email,
     required this.imageUrl,
     required this.about,
-    required this.pushToken,
+    required this.fcmToken,
     required this.lastActive,
     required this.createdAt,
     required this.isOnline,
@@ -31,7 +31,7 @@ class UserModel {
       email: map['email'] ?? '',
       imageUrl: map['image'] ?? '',
       about: map['about'] ?? "Hey there! I'm using this app.",
-      pushToken: map['pushToken'] ?? '',
+      fcmToken: map['fcmToken'],
       lastActive:
           map['lastActive'] != null
               ? (map['lastActive'] as Timestamp).toDate()

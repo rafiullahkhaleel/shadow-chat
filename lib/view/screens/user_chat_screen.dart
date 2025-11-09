@@ -10,6 +10,7 @@ import 'package:shadow_chat/view/screens/user_profile_view.dart';
 import 'package:shadow_chat/view/widgets/message_card.dart';
 
 import '../../core/provider/messages_provider.dart';
+import '../../core/provider/notification_provider.dart';
 
 class UserChatScreen extends ConsumerWidget {
   final UserModel userData;
@@ -20,6 +21,7 @@ class UserChatScreen extends ConsumerWidget {
     String time = DateFormat('hh:mm a').format(userData.lastActive!);
     final messageState = ref.watch(messagesProvider(userData.uid));
     final messageNotifier = ref.read(messagesProvider(userData.uid).notifier);
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -35,9 +37,11 @@ class UserChatScreen extends ConsumerWidget {
         title: ListTile(
           contentPadding: EdgeInsets.zero,
           onTap: () {
-            Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (context) => UserProfileView(userData : userData)));
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => UserProfileView(userData: userData),
+              ),
+            );
           },
           leading: CircleAvatar(
             radius: 23,
@@ -133,7 +137,16 @@ class UserChatScreen extends ConsumerWidget {
                     minWidth: 0,
                     padding: EdgeInsets.all(8),
                     onPressed: () {
-                      messageNotifier.sendMessage(userData.uid);
+                      final notification = ref.read(
+                        notificationProvider.notifier,
+                      );
+                      messageNotifier.sendMessage(userData.uid).then((value) {
+                        notification.sendPushNotification(
+                          deviceToken: userData.fcmToken ?? '',
+                          title: userData.name,
+                          body: messageNotifier.messageController.text,
+                        );
+                      });
                     },
                     shape: CircleBorder(),
                     color: AppColors.mainColor,

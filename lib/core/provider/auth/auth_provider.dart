@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shadow_chat/core/provider/auth/auth_state.dart';
-import 'package:shadow_chat/core/provider/auth/notification_provider.dart';
+import 'package:shadow_chat/core/provider/notification_provider.dart';
 import 'package:shadow_chat/core/provider/current_user_data.dart';
 import 'package:shadow_chat/core/provider/users_data_provider.dart';
 import 'package:shadow_chat/view/screens/home_screen.dart';
