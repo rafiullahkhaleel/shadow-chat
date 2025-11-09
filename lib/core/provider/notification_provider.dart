@@ -44,6 +44,7 @@ class NotificationNotifier extends StateNotifier<String?> {
 
   Future<AccessCredentials> _getAccessToken() async {
     final serviceAccountPath = dotenv.env['PATH_TO_SECRET'];
+    debugPrint('✅ Service account path: $serviceAccountPath');
     String serviceAccountJson = await rootBundle.loadString(
       serviceAccountPath!,
     );
@@ -61,12 +62,17 @@ class NotificationNotifier extends StateNotifier<String?> {
     required String body,
     Map<String, dynamic>? data,
   }) async {
-    if (deviceToken.isEmpty) return false;
+    if (deviceToken.isEmpty) {
+      debugPrint('❌ Device token is empty!');
+      return false;
+    }
     final credentials = await _getAccessToken();
     final accessToken = credentials.accessToken.data;
     final projectId = dotenv.env['PROJECT_ID'];
+    debugPrint('Access Token: $accessToken');
     final url = Uri.parse(
-      'https://fcm.googleapis.com/v1/$projectId/message:send',
+      'https://fcm.googleapis.com/v1/projects/$projectId/messages:send'
+      ,
     );
     final message = {
       'message': {

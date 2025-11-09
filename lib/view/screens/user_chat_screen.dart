@@ -140,6 +140,7 @@ class UserChatScreen extends ConsumerWidget {
                       final notification = ref.read(
                         notificationProvider.notifier,
                       );
+                      debugPrint('${userData.fcmToken}');
                       messageNotifier.sendMessage(userData.uid).then((value) {
                         notification.sendPushNotification(
                           deviceToken: userData.fcmToken ?? '',
