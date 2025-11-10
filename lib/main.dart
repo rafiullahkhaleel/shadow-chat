@@ -2,6 +2,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_notification_channel/flutter_notification_channel.dart';
+import 'package:flutter_notification_channel/notification_importance.dart';
+import 'package:flutter_notification_channel/notification_visibility.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadow_chat/core/extensions/context_extension.dart';
 import 'package:shadow_chat/core/services/online_status_handler.dart';
@@ -14,6 +17,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await dotenv.load(fileName: ".env");
+  await _setupNotificationChannel();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   runApp(OnlineStatusHandler(child: const MyApp()));
 }
@@ -67,3 +71,19 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+Future<void> _setupNotificationChannel() async {
+  try {
+    final result = await FlutterNotificationChannel().registerNotificationChannel(
+      id: 'chats',
+      name: 'Chats',
+      description: 'For showing Message Notification',
+      importance: NotificationImportance.IMPORTANCE_HIGH,
+    );
+
+    debugPrint('✅ Notification Channel Registered Successfully: $result');
+  } catch (e) {
+    debugPrint('❌ Failed to register notification channel: $e');
+  }
+}
+

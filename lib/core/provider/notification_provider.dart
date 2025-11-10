@@ -37,6 +37,13 @@ class NotificationNotifier extends StateNotifier<String?> {
             .doc(userId)
             .update({'fcmToken': newToken});
       });
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        debugPrint('Foreground message received: ${message.messageId}');
+        if(message.notification != null) {
+          debugPrint('Notification Title: ${message.notification?.title}');
+          debugPrint('Notification Body: ${message.notification?.body}');
+        }
+      });
     } catch (e) {
       debugPrint('Error getting FCM token: $e');
     }
@@ -61,7 +68,7 @@ class NotificationNotifier extends StateNotifier<String?> {
     required String title,
     required String body,
     Map<String, dynamic>? data,
-  }) async {
+  }) async  {
     if (deviceToken.isEmpty) {
       debugPrint('❌ Device token is empty!');
       return false;
@@ -71,13 +78,16 @@ class NotificationNotifier extends StateNotifier<String?> {
     final projectId = dotenv.env['PROJECT_ID'];
     debugPrint('Access Token: $accessToken');
     final url = Uri.parse(
-      'https://fcm.googleapis.com/v1/projects/$projectId/messages:send'
-      ,
+      'https://fcm.googleapis.com/v1/projects/$projectId/messages:send',
     );
     final message = {
       'message': {
         'token': deviceToken,
-        'notification': {'title': title, 'body': body},
+        'notification': {
+          'title': title,
+          'body': body,
+          "android_channel_id": "chats",
+        },
         'data': data ?? {},
       },
     };
