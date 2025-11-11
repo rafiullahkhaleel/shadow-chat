@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadow_chat/core/model/message_model.dart';
 import 'package:intl/intl.dart';
@@ -491,6 +492,11 @@ class MessageCard extends ConsumerWidget {
                 : ListTile(
                   leading: Icon(Icons.copy_all),
                   title: Text('Copy Text'),
+                  onTap: () async {
+                    final navi = Navigator.of(context);
+                    await Clipboard.setData(ClipboardData(text: data.msg));
+                    navi.pop();
+                  },
                 ),
             if (isMe && data.type != MessageType.image)
               ListTile(leading: Icon(Icons.edit), title: Text('Edit Message')),
@@ -505,10 +511,17 @@ class MessageCard extends ConsumerWidget {
                       .deleteMessage(data);
                 },
               ),
-            ListTile(leading: Icon(Icons.done_all), title: Text('Sent at')),
+            ListTile(
+              leading: Icon(Icons.done_all),
+              title: Text('Sent at: ${_formatTime(data.send)}'),
+            ),
             ListTile(
               leading: Icon(Icons.done_all, color: Colors.blue.shade400),
-              title: Text('Read at'),
+              title: Text(
+                data.read != null
+                    ? 'Read at: ${_formatTime(data.read)}'
+                    : 'Unread',
+              ),
             ),
           ],
         );
