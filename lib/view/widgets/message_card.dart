@@ -18,8 +18,8 @@ class MessageCard extends ConsumerWidget {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: InkWell(
-        onLongPress: (){
-          _bottomSheet(context, isMe, data.type);
+        onLongPress: () {
+          _bottomSheet(context, isMe, ref);
         },
         child: Container(
           constraints: BoxConstraints(
@@ -478,7 +478,7 @@ class MessageCard extends ConsumerWidget {
     );
   }
 
-  void _bottomSheet(BuildContext context,bool isMe,MessageType type) {
+  void _bottomSheet(BuildContext context, bool isMe, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
       builder: (_) {
@@ -486,13 +486,25 @@ class MessageCard extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(height: 10),
-            type == MessageType.image ? ListTile(leading: Icon(Icons.download), title: Text('Save')):
-            ListTile(leading: Icon(Icons.copy_all), title: Text('Copy Text')),
-            if(isMe && type != MessageType.image)ListTile(leading: Icon(Icons.edit), title: Text('Edit Message')),
-            if(isMe)ListTile(
-              leading: Icon(Icons.delete_forever),
-              title: Text('Delete Message'),
-            ),
+            data.type == MessageType.image
+                ? ListTile(leading: Icon(Icons.download), title: Text('Save'))
+                : ListTile(
+                  leading: Icon(Icons.copy_all),
+                  title: Text('Copy Text'),
+                ),
+            if (isMe && data.type != MessageType.image)
+              ListTile(leading: Icon(Icons.edit), title: Text('Edit Message')),
+            if (isMe)
+              ListTile(
+                leading: Icon(Icons.delete_forever),
+                title: Text('Delete Message'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  ref
+                      .read(messagesProvider(data.toId).notifier)
+                      .deleteMessage(data);
+                },
+              ),
             ListTile(leading: Icon(Icons.done_all), title: Text('Sent at')),
             ListTile(
               leading: Icon(Icons.done_all, color: Colors.blue.shade400),

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -219,6 +220,17 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
         .collection('chat/${getConversationId(message.fromId)}/messages')
         .doc(message.docsId)
         .update({'read': FieldValue.serverTimestamp()});
+  }
+
+  Future<void> deleteMessage(MessageModel message) async {
+    await _firestore
+        .collection('chat/${getConversationId(message.toId)}/messages')
+        .doc(message.docsId)
+        .delete();
+    if (message.type == MessageType.image) {
+      await FirebaseStorage.instance.refFromURL(message.msg).delete();
+      debugPrint('Image deleted from storage');
+    }
   }
 
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
