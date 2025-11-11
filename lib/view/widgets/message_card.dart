@@ -17,13 +17,20 @@ class MessageCard extends ConsumerWidget {
 
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
+      child: InkWell(
+        onLongPress: (){
+          _bottomSheet(context, isMe, data.type);
+        },
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.75,
+          ),
+          margin: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          child:
+              isMe
+                  ? _sentMessage(context, ref)
+                  : _receivedMessage(context, ref),
         ),
-        margin: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        child:
-            isMe ? _sentMessage(context, ref) : _receivedMessage(context, ref),
       ),
     );
   }
@@ -468,6 +475,32 @@ class MessageCard extends ConsumerWidget {
               ),
             ),
       ),
+    );
+  }
+
+  void _bottomSheet(BuildContext context,bool isMe,MessageType type) {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(height: 10),
+            type == MessageType.image ? ListTile(leading: Icon(Icons.download), title: Text('Save')):
+            ListTile(leading: Icon(Icons.copy_all), title: Text('Copy Text')),
+            if(isMe && type != MessageType.image)ListTile(leading: Icon(Icons.edit), title: Text('Edit Message')),
+            if(isMe)ListTile(
+              leading: Icon(Icons.delete_forever),
+              title: Text('Delete Message'),
+            ),
+            ListTile(leading: Icon(Icons.done_all), title: Text('Sent at')),
+            ListTile(
+              leading: Icon(Icons.done_all, color: Colors.blue.shade400),
+              title: Text('Read at'),
+            ),
+          ],
+        );
+      },
     );
   }
 
