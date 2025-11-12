@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadow_chat/core/model/message_model.dart';
 import 'package:intl/intl.dart';
+import 'package:shadow_chat/core/services/image_service.dart';
 import '../../core/provider/messages_provider.dart';
 
 class MessageCard extends ConsumerWidget {
@@ -445,7 +446,7 @@ class MessageCard extends ConsumerWidget {
                   IconButton(
                     icon: Icon(Icons.download),
                     onPressed: () {
-                      // Implement download
+                      ImageService().saveImageInGallery(context, imageUrl, false);
                     },
                   ),
                   IconButton(
@@ -488,7 +489,9 @@ class MessageCard extends ConsumerWidget {
           children: [
             SizedBox(height: 10),
             data.type == MessageType.image
-                ? ListTile(leading: Icon(Icons.download), title: Text('Save'))
+                ? ListTile(leading: Icon(Icons.download), title: Text('Save'),onTap: (){
+                  ImageService().saveImageInGallery(context, data.msg, false);
+            },)
                 : ListTile(
                   leading: Icon(Icons.copy_all),
                   title: Text('Copy Text'),
