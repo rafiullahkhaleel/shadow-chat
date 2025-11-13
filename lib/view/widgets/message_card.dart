@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadow_chat/core/model/message_model.dart';
 import 'package:intl/intl.dart';
-import 'package:shadow_chat/core/services/image_service.dart';
 import '../../core/provider/messages_provider.dart';
 
 class MessageCard extends ConsumerWidget {
@@ -443,12 +442,7 @@ class MessageCard extends ConsumerWidget {
                 backgroundColor: Colors.black,
                 iconTheme: IconThemeData(color: Colors.white),
                 actions: [
-                  IconButton(
-                    icon: Icon(Icons.download),
-                    onPressed: () {
-                      ImageService().saveImageInGallery(context, imageUrl, false);
-                    },
-                  ),
+                  IconButton(icon: Icon(Icons.download), onPressed: () {}),
                   IconButton(
                     icon: Icon(Icons.share),
                     onPressed: () {
@@ -489,9 +483,11 @@ class MessageCard extends ConsumerWidget {
           children: [
             SizedBox(height: 10),
             data.type == MessageType.image
-                ? ListTile(leading: Icon(Icons.download), title: Text('Save'),onTap: (){
-                  ImageService().saveImageInGallery(context, data.msg, false);
-            },)
+                ? ListTile(
+                  leading: Icon(Icons.download),
+                  title: Text('Save'),
+                  onTap: () {},
+                )
                 : ListTile(
                   leading: Icon(Icons.copy_all),
                   title: Text('Copy Text'),
@@ -502,7 +498,16 @@ class MessageCard extends ConsumerWidget {
                   },
                 ),
             if (isMe && data.type != MessageType.image)
-              ListTile(leading: Icon(Icons.edit), title: Text('Edit Message')),
+              ListTile(
+                leading: Icon(Icons.edit),
+                title: Text('Edit Message'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  ref
+                      .read(messagesProvider(data.toId).notifier)
+                      .forUpdate(context, data);
+                },
+              ),
             if (isMe)
               ListTile(
                 leading: Icon(Icons.delete_forever),

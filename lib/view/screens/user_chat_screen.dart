@@ -140,14 +140,17 @@ class UserChatScreen extends ConsumerWidget {
                       final notification = ref.read(
                         notificationProvider.notifier,
                       );
-                      debugPrint('${userData.fcmToken}');
-                      messageNotifier.sendMessage(userData.uid).then((value) {
-                        notification.sendPushNotification(
-                          deviceToken: userData.fcmToken ?? '',
-                          title: userData.name,
-                          body: messageNotifier.messageController.text,
-                        );
-                      });
+                      if(messageState.isEdit && messageState.editedMessage != null){
+                        messageNotifier.updateMessage(messageState.editedMessage!);
+                      }else{
+                        messageNotifier.sendMessage(userData.uid).then((value) {
+                          notification.sendPushNotification(
+                            deviceToken: userData.fcmToken ?? '',
+                            title: userData.name,
+                            body: messageNotifier.messageController.text,
+                          );
+                        });
+                      }
                     },
                     shape: CircleBorder(),
                     color: AppColors.mainColor,

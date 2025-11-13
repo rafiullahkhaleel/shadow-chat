@@ -1,12 +1,7 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:shadow_chat/core/utils/utils.dart';
 
 class ImageService {
   Future<File?> imagePicker(ImageSource source) async {
@@ -43,25 +38,25 @@ class ImageService {
     return downloadUrl;
   }
 
-  Future<void> saveImageInGallery(
-    BuildContext context,
-    String imageUrl,
-    bool isFullScreen,
-  ) async {
-    try {
-      File file = await DefaultCacheManager().getSingleFile(imageUrl);
-
-      Uint8List bytes = await file.readAsBytes();
-      await ImageGallerySaver.saveImage(
-        bytes,
-        name: "ShadowChat${DateTime.now().millisecondsSinceEpoch}",
-      );
-      SnackBarHelper.showSuccess(context, 'Image saved to gallery!');
-      if (!isFullScreen) {
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      SnackBarHelper.showError(context, 'Failed to save image');
-    }
-  }
+  // Future<void> saveImageInGallery(
+  //   BuildContext context,
+  //   String imageUrl,
+  //   bool isFullScreen,
+  // ) async {
+  //   try {
+  //     File file = await DefaultCacheManager().getSingleFile(imageUrl);
+  //
+  //     Uint8List bytes = await file.readAsBytes();
+  //     await ImageGallerySaver.saveImage(
+  //       bytes,
+  //       name: "ShadowChat${DateTime.now().millisecondsSinceEpoch}",
+  //     );
+  //     SnackBarHelper.showSuccess(context, 'Image saved to gallery!');
+  //     if (!isFullScreen) {
+  //       Navigator.pop(context);
+  //     }
+  //   } catch (e) {
+  //     SnackBarHelper.showError(context, 'Failed to save image');
+  //   }
+  // }
 }

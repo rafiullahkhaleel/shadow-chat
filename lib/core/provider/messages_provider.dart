@@ -233,6 +233,27 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
     }
   }
 
+  forUpdate(BuildContext context,MessageModel editMessage) {
+    FocusScope.of(context).requestFocus(focusNode);
+    state = state.copyWith(isEdit: true, editedMessage: editMessage);
+    messageController.text = editMessage.msg;
+  }
+
+  Future<void> updateMessage(MessageModel message) async {
+    final text = messageController.text.trim();
+    if (text.isEmpty) return;
+    try {
+      await _firestore
+          .collection('chat/${getConversationId(message.toId)}/messages')
+          .doc(message.docsId)
+          .update({'msg': text});
+      messageController.clear();
+      state = state.copyWith(isEdit: false,editedMessage: null);
+    } catch (e) {
+      debugPrint('ERROR OCCURRED $e');
+    }
+  }
+
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
   _messagesSubscription;
   Future<void> fetchMessages(String id) async {
@@ -317,18 +338,30 @@ class MessagesState {
   final AsyncValue<List<MessageModel>> data;
   final AsyncValue<MessageModel>? lastMessage;
   final bool showEmoji;
+  final bool isEdit;
+  final MessageModel? editedMessage;
 
-  MessagesState({required this.data, this.lastMessage, this.showEmoji = false});
+  MessagesState({
+    required this.data,
+    this.lastMessage,
+    this.showEmoji = false,
+    this.isEdit = false,
+    this.editedMessage,
+  });
 
   MessagesState copyWith({
     AsyncValue<List<MessageModel>>? data,
     AsyncValue<MessageModel>? lastMessage,
     bool? showEmoji,
+    bool? isEdit,
+    MessageModel? editedMessage,
   }) {
     return MessagesState(
       data: data ?? this.data,
       lastMessage: lastMessage ?? this.lastMessage,
       showEmoji: showEmoji ?? this.showEmoji,
+      isEdit: isEdit ?? this.isEdit,
+      editedMessage: editedMessage ?? this.editedMessage,
     );
   }
 }
