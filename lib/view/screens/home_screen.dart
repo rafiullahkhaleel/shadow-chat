@@ -5,6 +5,7 @@ import 'package:shadow_chat/core/provider/messages_provider.dart';
 import 'package:shadow_chat/view/screens/profile_screen.dart';
 import 'package:shadow_chat/view/widgets/user_card.dart';
 import '../../core/provider/users_data_provider.dart';
+import '../widgets/add_user+dialog.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -102,6 +103,16 @@ class HomeScreen extends ConsumerWidget {
           },
           error: (error, stack) => Text('ERROR OCCURRED $error'),
           loading: () => const Center(child: CircularProgressIndicator()),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (context) => AddUserDialog(),
+            );
+          },
+          backgroundColor: AppColors.white,
+          child: Icon(Icons.add_comment_rounded,color: AppColors.mainColor,),
         ),
       ),
     );

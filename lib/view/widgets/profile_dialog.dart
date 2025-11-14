@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:shadow_chat/core/contants/constants.dart';
 import 'package:shadow_chat/core/extensions/context_extension.dart';
 import 'package:shadow_chat/core/model/user_model.dart';
-import 'package:shadow_chat/view/screens/profile_screen.dart';
 import 'package:shadow_chat/view/screens/user_profile_view.dart';
 
 class ProfileDialog extends StatelessWidget {
